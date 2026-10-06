@@ -1,23 +1,16 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
-// LOAD JSON
-Future<Map<String, dynamic>> loadStudentData() async {
-  final jsonString = await rootBundle.loadString(
-    'assets/data/student_data.json',
-  );
+const String studentName = 'Putu Agus Dedy Putra Adnyana';
+const String studentId = '2415051104';
 
-  return jsonDecode(jsonString) as Map<String, dynamic>;
-}
-
-// MAIN
 void main() {
   runApp(const MyApp());
 }
 
-// MY APP
+// =====================================================
+// APP
+// =====================================================
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -25,617 +18,235 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Learning Dashboard',
-
+      title: 'Course Explorer',
       theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+        ),
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF6F7FB),
-        fontFamily: 'Arial',
       ),
-
-      home: const DashboardPage(),
+      home: const MainPage(),
     );
   }
 }
 
-// DASHBOARD
-class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+// =====================================================
+// MAIN PAGE / RESPONSIVE SHELL
+// =====================================================
+
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
 
   @override
-  State<DashboardPage> createState() =>
-      _DashboardPageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
-  late Future<Map<String, dynamic>> studentFuture;
+class _MainPageState extends State<MainPage> {
+  int selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    studentFuture = loadStudentData();
+  final List<Widget> pages = const [
+    HomePage(),
+    CoursesPage(),
+    ProfilePage(),
+  ];
+
+  // NavigationBar untuk Compact dan Medium
+  Widget buildNavigationBar() {
+    return NavigationBar(
+      selectedIndex: selectedIndex,
+      onDestinationSelected: (index) {
+        setState(() {
+          selectedIndex = index;
+        });
+      },
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.school_outlined),
+          selectedIcon: Icon(Icons.school),
+          label: 'Courses',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person),
+          label: 'Profile',
+        ),
+      ],
+    );
+  }
+
+  // NavigationRail untuk Expanded
+  Widget buildNavigationRail() {
+    return NavigationRail(
+      selectedIndex: selectedIndex,
+      onDestinationSelected: (index) {
+        setState(() {
+          selectedIndex = index;
+        });
+      },
+      labelType: NavigationRailLabelType.all,
+      destinations: const [
+        NavigationRailDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: Text('Home'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.school_outlined),
+          selectedIcon: Icon(Icons.school),
+          label: Text('Courses'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person),
+          label: Text('Profile'),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.white,
-
-        titleSpacing: 16,
-
-        title: Row(
-          children: [
-            // ICON BUKU
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEDEBFF),
-                borderRadius: BorderRadius.circular(14),
-              ),
-
-              child: const Icon(
-                Icons.menu_book_rounded,
-                color: Color(0xFF4F46E5),
-                size: 27,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // COMPACT / MEDIUM
+        if (constraints.maxWidth < 840) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text(
+                'Course Explorer',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
+            body: pages[selectedIndex],
+            bottomNavigationBar: buildNavigationBar(),
+          );
+        }
 
-            const SizedBox(width: 12),
-
-            const Text(
-              'Learning Dashboard',
+        // EXPANDED
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'Course Explorer',
               style: TextStyle(
-                color: Color(0xFF172033),
-                fontSize: 21,
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ],
-        ),
-
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                studentFuture = loadStudentData();
-              });
-            },
-
-            icon: const Icon(
-              Icons.refresh_rounded,
-              color: Color(0xFF374151),
-              size: 28,
-            ),
           ),
-
-          const SizedBox(width: 8),
-        ],
-      ),
-
-      // BODY
-      body: SafeArea(
-        child: FutureBuilder<Map<String, dynamic>>(
-          future: studentFuture,
-
-          builder: (context, snapshot) {
-            // LOADING
-            if (snapshot.connectionState ==
-                ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-
-            // ERROR
-            if (snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Text(
-                    'Gagal memuat data:\n${snapshot.error}',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              );
-            }
-
-            if (!snapshot.hasData) {
-              return const Center(
-                child: Text('Data tidak tersedia'),
-              );
-            }
-
-            final data = snapshot.data!;
-
-            final student =
-                data['student']
-                    as Map<String, dynamic>;
-
-            final courses =
-                data['courses'] as List<dynamic>;
-
-            final completed = courses
-                .where(
-                  (course) =>
-                      course['status'] == 'done',
-                )
-                .length;
-
-            final totalCredits = courses.fold<int>(
-              0,
-              (total, course) =>
-                  total + (course['credits'] as int),
-            );
-
-            // SCROLL VIEW
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                16,
-                18,
-                16,
-                30,
+          body: Row(
+            children: [
+              buildNavigationRail(),
+              const VerticalDivider(
+                width: 1,
               ),
-
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
-                children: [
-
-                  // PROFILE CARD
-                  ProfileCard(
-                    name: student['name'] as String,
-                    nim: student['nim'] as String,
-                    semester: student['semester'] as int,
-                  ),
-
-                  SummarySection(
-                    totalCourses: courses.length,
-                    totalCredits: totalCredits,
-                    completed: completed,
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  // TITLE DAFTAR MATA KULIAH
-                  Row(
-                    children: [
-                      const Text(
-                        'Daftar Mata Kuliah',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight:
-                              FontWeight.bold,
-                          color: Color(0xFF172033),
-                        ),
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      Container(
-                        padding:
-                            const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-
-                        decoration:
-                            BoxDecoration(
-                          color:
-                              const Color(
-                            0xFFE8E9FF,
-                          ),
-
-                          borderRadius:
-                              BorderRadius.circular(
-                            20,
-                          ),
-                        ),
-
-                        child: Text(
-                          '${courses.length}',
-                          style: const TextStyle(
-                            color:
-                                Color(0xFF4F46E5),
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // COURSE LIST
-                  ...courses.map(
-                    (course) {
-                      final item =
-                          course
-                              as Map<String, dynamic>;
-
-                      return CourseCard(
-                        title:
-                            item['title'] as String,
-
-                        code:
-                            item['code'] as String,
-
-                        credits:
-                            item['credits'] as int,
-
-                        status:
-                            item['status'] as String,
-                      );
-                    },
-                  ),
-                ],
+              Expanded(
+                child: pages[selectedIndex],
               ),
-            );
-          },
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
-// PROFILE CARD
-class ProfileCard extends StatelessWidget {
-  final String name;
-  final String nim;
-  final int semester;
+// =====================================================
+// REUSABLE WIDGET 1 - STUDENT IDENTITY
+// =====================================================
 
-  const ProfileCard({
-    super.key,
-    required this.name,
-    required this.nim,
-    required this.semester,
-  });
+class StudentIdentity extends StatelessWidget {
+  const StudentIdentity({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-
-      padding: const EdgeInsets.all(20),
-
-      decoration: BoxDecoration(
-        color: Colors.white,
-
-        borderRadius: BorderRadius.circular(24),
-
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.07),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-
-      child: Row(
-        children: [
-
-          // FOTO
-          Container(
-            width: 82,
-            height: 82,
-
-            padding: const EdgeInsets.all(3),
-
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-
-              border: Border.all(
-                color: const Color(0xFF4F46E5),
-                width: 3,
-              ),
-            ),
-
-            child: const CircleAvatar(
-              radius: 38,
-
-              backgroundImage: AssetImage(
-                'assets/images/profile.jpg',
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 18),
-
-          // IDENTITAS
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
-              children: [
-
-                Text(
-                  name,
-
-                  maxLines: 2,
-
-                  overflow:
-                      TextOverflow.ellipsis,
-
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight:
-                        FontWeight.bold,
-                    color:
-                        Color(0xFF172033),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // BADGE NIM + SEMESTER
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-
-                  children: [
-
-                    // NIM BADGE
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 7,
-                      ),
-
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            const Color(0xFFF0F4F8),
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          9,
-                        ),
-                      ),
-
-                      child: Text(
-                        'NIM: $nim',
-                        style:
-                            const TextStyle(
-                          fontSize: 13,
-                          fontWeight:
-                              FontWeight.w600,
-                          color:
-                              Color(0xFF374151),
-                        ),
-                      ),
-                    ),
-
-                    // SEMESTER BADGE
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 11,
-                        vertical: 7,
-                      ),
-
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            const Color(0xFFEDEBFF),
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          9,
-                        ),
-                      ),
-
-                      child: Text(
-                        'Semester $semester',
-                        style:
-                            const TextStyle(
-                          fontSize: 13,
-                          fontWeight:
-                              FontWeight.bold,
-                          color:
-                              Color(0xFF4F46E5),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// SUMMARY SECTION
-class SummarySection extends StatelessWidget {
-  final int totalCourses;
-  final int totalCredits;
-  final int completed;
-
-  const SummarySection({
-    super.key,
-    required this.totalCourses,
-    required this.totalCredits,
-    required this.completed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
-        Expanded(
-          child: SummaryCard(
-            icon:
-                Icons.menu_book_rounded,
-
-            value:
-                '$totalCourses',
-
-            label:
-                'Mata Kuliah',
-
-            iconColor:
-                const Color(0xFF4F46E5),
-
-            backgroundColor:
-                const Color(0xFFEDEBFF),
+        Text(
+          studentName,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
           ),
         ),
-
-        const SizedBox(width: 10),
-
-        Expanded(
-          child: SummaryCard(
-            icon:
-                Icons.school_rounded,
-
-            value:
-                '$totalCredits',
-
-            label:
-                'Total SKS',
-
-            iconColor:
-                const Color(0xFF059669),
-
-            backgroundColor:
-                const Color(0xFFDDF8EE),
-          ),
-        ),
-
-        const SizedBox(width: 10),
-
-        Expanded(
-          child: SummaryCard(
-            icon:
-                Icons.check_circle_rounded,
-
-            value:
-                '$completed',
-
-            label:
-                'Selesai',
-
-            iconColor:
-                const Color(0xFF16A34A),
-
-            backgroundColor:
-                const Color(0xFFDCFCE7),
-          ),
+        Text(
+          'NIM: $studentId',
         ),
       ],
     );
   }
 }
 
-// SUMMARY CARD
-class SummaryCard extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color iconColor;
-  final Color backgroundColor;
+// =====================================================
+// HOME PAGE
+// =====================================================
 
-  const SummaryCard({
-    super.key,
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.iconColor,
-    required this.backgroundColor,
-  });
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 128,
-
-      padding: const EdgeInsets.all(12),
-
-      decoration: BoxDecoration(
-        color: Colors.white,
-
-        borderRadius:
-            BorderRadius.circular(18),
-
-        boxShadow: [
-          BoxShadow(
-            color:
-                Colors.black.withOpacity(0.06),
-
-            blurRadius: 8,
-
-            offset:
-                const Offset(0, 3),
-          ),
-        ],
-      ),
-
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
       child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
-
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const StudentIdentity(),
 
-          Container(
-            width: 46,
-            height: 46,
+          const SizedBox(height: 30),
 
-            decoration:
-                BoxDecoration(
-              color:
-                  backgroundColor,
+          Center(
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.school,
+                  size: 90,
+                ),
 
-              borderRadius:
-                  BorderRadius.circular(14),
-            ),
+                const SizedBox(height: 16),
 
-            child: Icon(
-              icon,
-              color:
-                  iconColor,
-              size: 25,
-            ),
-          ),
+                const Text(
+                  'Course Explorer',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
 
-          const SizedBox(height: 7),
+                const SizedBox(height: 8),
 
-          Text(
-            value,
+                Text(
+                  'Jelajahi course dan materi pembelajaran.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                  ),
+                ),
 
-            style: const TextStyle(
-              fontSize: 21,
-              fontWeight:
-                  FontWeight.bold,
-              color:
-                  Color(0xFF172033),
-            ),
-          ),
+                const SizedBox(height: 24),
 
-          const SizedBox(height: 2),
-
-          Text(
-            label,
-
-            textAlign:
-                TextAlign.center,
-
-            style: const TextStyle(
-              fontSize: 12,
-              color:
-                  Color(0xFF596273),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Selamat datang di Course Explorer',
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.explore),
+                  label: const Text(
+                    'Mulai Menjelajah',
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -644,261 +255,787 @@ class SummaryCard extends StatelessWidget {
   }
 }
 
-// COURSE CARD
+// =====================================================
+// COURSE DATA
+// =====================================================
+
+final List<Map<String, dynamic>> courses = [
+  {
+    'title': 'Responsive Layout',
+    'code': 'MOB04',
+    'status': 'Active',
+    'credits': 3,
+  },
+  {
+    'title': 'Navigation',
+    'code': 'MOB05',
+    'status': 'Planned',
+    'credits': 3,
+  },
+  {
+    'title': 'Interaction',
+    'code': 'MOB06',
+    'status': 'Planned',
+    'credits': 3,
+  },
+  {
+    'title': 'Form Input',
+    'code': 'MOB07',
+    'status': 'Active',
+    'credits': 3,
+  },
+  {
+    'title': 'Feedback',
+    'code': 'MOB08',
+    'status': 'Planned',
+    'credits': 2,
+  },
+  {
+    'title': 'Course Explorer',
+    'code': 'MOB09',
+    'status': 'Active',
+    'credits': 3,
+  },
+];
+
+// =====================================================
+// COURSES PAGE
+// =====================================================
+
+class CoursesPage extends StatefulWidget {
+  const CoursesPage({super.key});
+
+  @override
+  State<CoursesPage> createState() => _CoursesPageState();
+}
+
+class _CoursesPageState extends State<CoursesPage> {
+  late List<bool> isFavorite;
+
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    isFavorite = List<bool>.filled(
+      courses.length,
+      false,
+    );
+  }
+
+  // Menentukan jumlah kolom berdasarkan ukuran layar
+  int columnsFor(double width) {
+    if (width < 600) {
+      return 1;
+    }
+
+    if (width < 840) {
+      return 2;
+    }
+
+    return 3;
+  }
+
+  void openCourseDetail(int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailPage(
+          course: courses[index],
+          isFavorite: isFavorite[index],
+          onFavoriteChanged: (value) {
+            setState(() {
+              isFavorite[index] = value;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final int columns =
+            columnsFor(constraints.maxWidth);
+
+        // Filter course berdasarkan pencarian
+        final filteredCourses = courses
+            .asMap()
+            .entries
+            .where((entry) {
+          final title =
+              entry.value['title'].toString().toLowerCase();
+
+          final code =
+              entry.value['code'].toString().toLowerCase();
+
+          final query = searchQuery.toLowerCase();
+
+          return title.contains(query) ||
+              code.contains(query);
+        }).toList();
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+            children: [
+              // IDENTITAS
+              const StudentIdentity(),
+
+              const SizedBox(height: 20),
+
+              // SEARCH
+              TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search courses...',
+                  prefixIcon: const Icon(
+                    Icons.search,
+                  ),
+                  filled: true,
+                  fillColor:
+                      Colors.blue.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'Available Courses',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // COURSE LIST / GRID
+              if (filteredCourses.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(30),
+                    child: Text(
+                      'Course tidak ditemukan.',
+                    ),
+                  ),
+                )
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics:
+                      const NeverScrollableScrollPhysics(),
+                  itemCount: filteredCourses.length,
+                  gridDelegate:
+                      SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+
+                    // Compact lebih tinggi karena
+                    // menggunakan satu kolom.
+                    childAspectRatio:
+                        columns == 1 ? 2.8 : 1.45,
+                  ),
+                  itemBuilder: (context, position) {
+                    final originalIndex =
+                        filteredCourses[position].key;
+
+                    final course =
+                        filteredCourses[position].value;
+
+                    return CourseCard(
+                      course: course,
+                      isFavorite:
+                          isFavorite[originalIndex],
+                      onTap: () {
+                        openCourseDetail(
+                          originalIndex,
+                        );
+                      },
+                      onFavorite: () {
+                        setState(() {
+                          isFavorite[originalIndex] =
+                              !isFavorite[originalIndex];
+                        });
+
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isFavorite[originalIndex]
+                                  ? '${course['title']} ditambahkan ke Favorite'
+                                  : '${course['title']} dihapus dari Favorite',
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// =====================================================
+// REUSABLE WIDGET 2 - COURSE CARD
+// =====================================================
+
 class CourseCard extends StatelessWidget {
-  final String title;
-  final String code;
-  final int credits;
-  final String status;
+  final Map<String, dynamic> course;
+  final bool isFavorite;
+  final VoidCallback onTap;
+  final VoidCallback onFavorite;
 
   const CourseCard({
     super.key,
-    required this.title,
-    required this.code,
-    required this.credits,
-    required this.status,
+    required this.course,
+    required this.isFavorite,
+    required this.onTap,
+    required this.onFavorite,
   });
 
   @override
   Widget build(BuildContext context) {
-
-    // STATUS STYLE
-    late IconData icon;
-    late Color iconColor;
-    late Color iconBackground;
-    late Color statusColor;
-    late Color statusBackground;
-    late String statusText;
-
-    if (status == 'done') {
-
-      // HIJAU - SELESAI
-      icon =
-          Icons.check_circle_rounded;
-
-      iconColor =
-          const Color(0xFF16A34A);
-
-      iconBackground =
-          const Color(0xFFDCFCE7);
-
-      statusColor =
-          const Color(0xFF16A34A);
-
-      statusBackground =
-          const Color(0xFFDCFCE7);
-
-      statusText =
-          'Selesai';
-
-    } else if (status == 'active') {
-
-      // BIRU - BERJALAN
-      icon =
-          Icons.play_circle_fill_rounded;
-
-      iconColor =
-          const Color(0xFF4F46E5);
-
-      iconBackground =
-          const Color(0xFFEDEBFF);
-
-      statusColor =
-          const Color(0xFF4F46E5);
-
-      statusBackground =
-          const Color(0xFFEDEBFF);
-
-      statusText =
-          'Berjalan';
-
-    } else {
-
-      // KUNING - DIRENCANAKAN
-      icon =
-          Icons.schedule_rounded;
-
-      iconColor =
-          const Color(0xFFD97706);
-
-      iconBackground =
-          const Color(0xFFFEF3C7);
-
-      statusColor =
-          const Color(0xFFD97706);
-
-      statusBackground =
-          const Color(0xFFFEF3C7);
-
-      statusText =
-          'Direncanakan';
-    }
-
-    // COURSE CARD
-    return Container(
-      width: double.infinity,
-
-      margin:
-          const EdgeInsets.only(bottom: 12),
-
-      padding: const EdgeInsets.all(16),
-
-      decoration: BoxDecoration(
-        color: Colors.white,
-
-        borderRadius:
-            BorderRadius.circular(20),
-
-        boxShadow: [
-          BoxShadow(
-            color:
-                Colors.black.withOpacity(0.07),
-
-            blurRadius: 8,
-
-            offset:
-                const Offset(0, 3),
-          ),
-        ],
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Colors.blue.shade200,
+        ),
       ),
-
-      child: Row(
-        children: [
-
-          // STATUS ICON
-          Container(
-            width: 52,
-            height: 52,
-
-            decoration:
-                BoxDecoration(
-              color:
-                  iconBackground,
-
-              borderRadius:
-                  BorderRadius.circular(15),
-            ),
-
-            child: Icon(
-              icon,
-              color:
-                  iconColor,
-              size: 28,
-            ),
-          ),
-
-          const SizedBox(width: 14),
-
-          // COURSE INFORMATION
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
-              children: [
-
-                Text(
-                  title,
-
-                  maxLines: 1,
-
-                  overflow:
-                      TextOverflow.ellipsis,
-
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight:
-                        FontWeight.bold,
-                    color:
-                        Color(0xFF172033),
-                  ),
-                ),
-
-                const SizedBox(height: 7),
-
-                Row(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  mainAxisAlignment:
+                      MainAxisAlignment.center,
                   children: [
-
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 4,
-                      ),
-
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            const Color(
-                          0xFFF1F3F6,
-                        ),
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          6,
-                        ),
-                      ),
-
-                      child: Text(
-                        code,
-
-                        style:
-                            const TextStyle(
-                          fontSize: 12,
-                          fontWeight:
-                              FontWeight.w600,
-                          color:
-                              Color(0xFF596273),
-                        ),
+                    Text(
+                      course['title'],
+                      maxLines: 2,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
 
-                    const SizedBox(width: 7),
+                    const SizedBox(height: 6),
 
                     Text(
-                      '• $credits SKS',
+                      course['code'],
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
 
-                      style:
-                          const TextStyle(
-                        fontSize: 12,
-                        color:
-                            Color(0xFF596273),
+                    const SizedBox(height: 6),
+
+                    Text(
+                      course['status'],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-              ],
+              ),
+
+              IconButton(
+                tooltip: isFavorite
+                    ? 'Hapus Favorite'
+                    : 'Tambah Favorite',
+                onPressed: onFavorite,
+                icon: Icon(
+                  isFavorite
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =====================================================
+// COURSE DETAIL PAGE
+// =====================================================
+
+class CourseDetailPage extends StatefulWidget {
+  final Map<String, dynamic> course;
+  final bool isFavorite;
+  final ValueChanged<bool> onFavoriteChanged;
+
+  const CourseDetailPage({
+    super.key,
+    required this.course,
+    required this.isFavorite,
+    required this.onFavoriteChanged,
+  });
+
+  @override
+  State<CourseDetailPage> createState() =>
+      _CourseDetailPageState();
+}
+
+class _CourseDetailPageState
+    extends State<CourseDetailPage> {
+  late bool isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+
+    isFavorite = widget.isFavorite;
+  }
+
+  void toggleFavorite() {
+    setState(() {
+      isFavorite = !isFavorite;
+    });
+
+    widget.onFavoriteChanged(isFavorite);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isFavorite
+              ? 'Course ditambahkan ke Favorite'
+              : 'Course dihapus dari Favorite',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Course Detail'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            const StudentIdentity(),
+
+            const SizedBox(height: 30),
+
+            Center(
+              child: CircleAvatar(
+                radius: 45,
+                child: const Icon(
+                  Icons.school,
+                  size: 45,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Center(
+              child: Text(
+                widget.course['title'],
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.code,
+                    ),
+                    title: const Text(
+                      'Course Code',
+                    ),
+                    subtitle: Text(
+                      widget.course['code'],
+                    ),
+                  ),
+
+                  ListTile(
+                    leading: const Icon(
+                      Icons.credit_score,
+                    ),
+                    title: const Text(
+                      'Credits',
+                    ),
+                    subtitle: Text(
+                      '${widget.course['credits']} SKS',
+                    ),
+                  ),
+
+                  ListTile(
+                    leading: const Icon(
+                      Icons.check_circle,
+                    ),
+                    title: const Text(
+                      'Status',
+                    ),
+                    subtitle: Text(
+                      widget.course['status'],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: toggleFavorite,
+                icon: Icon(
+                  isFavorite
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                ),
+                label: Text(
+                  isFavorite
+                      ? 'Favorite Aktif'
+                      : 'Tambah Favorite',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =====================================================
+// PROFILE PAGE
+// =====================================================
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          const Center(
+            child: CircleAvatar(
+              radius: 50,
+              child: Icon(
+                Icons.person,
+                size: 55,
+              ),
             ),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(height: 16),
 
-          // STATUS BADGE
-          Container(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 7,
-            ),
-
-            decoration:
-                BoxDecoration(
-              color:
-                  statusBackground,
-
-              borderRadius:
-                  BorderRadius.circular(20),
-            ),
-
+          const Center(
             child: Text(
-              statusText,
-
+              'Profile Mahasiswa',
               style: TextStyle(
-                fontSize: 11,
-                fontWeight:
-                    FontWeight.bold,
-                color:
-                    statusColor,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          const StudentIdentity(),
+
+          const SizedBox(height: 30),
+
+          const Divider(),
+
+          const SizedBox(height: 20),
+
+          const Text(
+            'Feedback Praktikum',
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          const FeedbackForm(),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================
+// FEEDBACK FORM
+// =====================================================
+
+class FeedbackForm extends StatefulWidget {
+  const FeedbackForm({super.key});
+
+  @override
+  State<FeedbackForm> createState() =>
+      _FeedbackFormState();
+}
+
+class _FeedbackFormState
+    extends State<FeedbackForm> {
+  final formKey = GlobalKey<FormState>();
+
+  final nameController =
+      TextEditingController(
+    text: studentName,
+  );
+
+  final nimController =
+      TextEditingController(
+    text: studentId,
+  );
+
+  final commentController =
+      TextEditingController();
+
+  void submitFeedback() {
+    // Validasi form
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Konfirmasi sebelum mengirim
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Konfirmasi',
+          ),
+          content: const Text(
+            'Apakah Anda yakin ingin mengirim feedback?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Batal',
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+
+                showDialog(
+                  context: this.context,
+                  barrierDismissible: false,
+                  builder: (context) {
+                    return const AlertDialog(
+                      content: Row(
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(width: 20),
+                          Text(
+                            'Menyimpan...',
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+
+                Future.delayed(
+                  const Duration(seconds: 1),
+                  () {
+                    if (!mounted) return;
+
+                    Navigator.pop(this.context);
+
+                    ScaffoldMessenger.of(this.context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Feedback berhasil dikirim',
+                        ),
+                      ),
+                    );
+
+                    showDialog(
+                      context: this.context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text(
+                            'Hasil Feedback',
+                          ),
+                          content: Text(
+                            'Nama: ${nameController.text}\n'
+                            'NIM: ${nimController.text}\n'
+                            'Komentar: ${commentController.text}',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(
+                                  context,
+                                );
+                              },
+                              child: const Text(
+                                'Tutup',
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+              child: const Text(
+                'Kirim',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    nimController.dispose();
+    commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Nama',
+              prefixIcon: Icon(
+                Icons.person,
+              ),
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null ||
+                  value.trim().isEmpty) {
+                return 'Nama wajib diisi';
+              }
+
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: nimController,
+            decoration: const InputDecoration(
+              labelText: 'NIM',
+              prefixIcon: Icon(
+                Icons.badge,
+              ),
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null ||
+                  value.trim().isEmpty) {
+                return 'NIM wajib diisi';
+              }
+
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          TextFormField(
+            controller: commentController,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Komentar',
+              hintText:
+                  'Minimal 5 karakter',
+              prefixIcon: Icon(
+                Icons.comment,
+              ),
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null ||
+                  value.trim().isEmpty) {
+                return 'Komentar wajib diisi';
+              }
+
+              if (value.trim().length < 5) {
+                return 'Komentar minimal 5 karakter';
+              }
+
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: submitFeedback,
+              icon: const Icon(
+                Icons.send,
+              ),
+              label: const Text(
+                'Kirim Feedback',
               ),
             ),
           ),

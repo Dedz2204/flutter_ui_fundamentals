@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -11,53 +12,41 @@ class CourseExplorerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 2 - Prop Drilling',
+      title: 'Tahap 3 - Lifting State Up',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
         ),
         useMaterial3: true,
       ),
-      home: const FavoritesParentPage(),
+      home: const FavoritePage(),
     );
   }
 }
 
-// PARENT: Menyimpan satu sumber state favorites.
-class FavoritesParentPage extends StatefulWidget {
-  const FavoritesParentPage({super.key});
+// PARENT: Satu-satunya pemilik state favorit.
+class FavoritePage extends StatefulWidget {
+  const FavoritePage({super.key});
 
   @override
-  State<FavoritesParentPage> createState() =>
-      _FavoritesParentPageState();
+  State<FavoritePage> createState() => _FavoritePageState();
 }
 
-class _FavoritesParentPageState
-    extends State<FavoritesParentPage> {
-  final List<String> _favorites = [];
+class _FavoritePageState extends State<FavoritePage> {
+  bool favorite = false;
 
-  // Callback untuk mengubah favorites.
-  void _toggleFavorite(String courseName) {
+  // Semua perubahan state dilakukan di parent.
+  void toggleFavorite() {
     setState(() {
-      if (_favorites.contains(courseName)) {
-        _favorites.remove(courseName);
-      } else {
-        _favorites.add(courseName);
-      }
+      favorite = !favorite;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool jaringanIsFavorite =
-        _favorites.contains('Jaringan Komputer');
-
-    final bool pemrogramanIsFavorite =
-        _favorites.contains('Pemrograman Mobile');
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Eksperimen Prop Drilling'),
+        title: const Text('Lifting State Up'),
         backgroundColor:
             Theme.of(context).colorScheme.inversePrimary,
       ),
@@ -72,87 +61,35 @@ class _FavoritesParentPageState
             ),
           ),
           const Text('NIM: 2415051104'),
+          const SizedBox(height: 24),
+
+          const Text(
+            'Single Source of Truth',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Status favorit disimpan pada parent. '
+            'Dua widget di bawah menerima nilai yang sama '
+            'melalui constructor.',
+          ),
           const SizedBox(height: 20),
 
-          // Menampilkan jumlah favorites.
-          Card(
-            child: ListTile(
-              leading: const Icon(
-                Icons.favorite,
-                color: Colors.red,
-              ),
-              title: const Text('Jumlah Favorit'),
-              trailing: Text(
-                '${_favorites.length}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+          // CHILD 1: Menampilkan status dan tombol perubahan.
+          CourseCard(
+            courseName: 'Jaringan Komputer',
+            isFavorite: favorite,
+            onFavoriteChanged: toggleFavorite,
           ),
 
           const SizedBox(height: 16),
 
-          const Text(
-            'Daftar Mata Kuliah',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // CHILD PERTAMA
-          // Parent meneruskan data dan callback melalui constructor.
-          CourseFavoriteChild(
-            courseName: 'Jaringan Komputer',
-            isFavorite: jaringanIsFavorite,
-            onToggleFavorite: () {
-              _toggleFavorite('Jaringan Komputer');
-            },
-          ),
-
-          const SizedBox(height: 12),
-
-          // CHILD KEDUA
-          // Parent meneruskan data dan callback melalui constructor.
-          CourseFavoriteChild(
-            courseName: 'Pemrograman Mobile',
-            isFavorite: pemrogramanIsFavorite,
-            onToggleFavorite: () {
-              _toggleFavorite('Pemrograman Mobile');
-            },
-          ),
-
-          const SizedBox(height: 20),
-
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Catatan Eksperimen',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'State favorit disimpan pada parent. '
-                    'Setiap child menerima status favorit '
-                    'dan callback melalui constructor. '
-                    'Jika jumlah child bertambah, data dan '
-                    'callback perlu diteruskan ke lebih banyak '
-                    'widget sehingga alur kode lebih sulit diikuti.',
-                  ),
-                ],
-              ),
-            ),
+          // CHILD 2: Menampilkan status dari sumber yang sama.
+          FavoriteStatusCard(
+            isFavorite: favorite,
           ),
         ],
       ),
@@ -160,17 +97,17 @@ class _FavoritesParentPageState
   }
 }
 
-// CHILD: Menerima data dan callback dari parent.
-class CourseFavoriteChild extends StatelessWidget {
+// CHILD 1: Tidak menyimpan salinan state favorit.
+class CourseCard extends StatelessWidget {
   final String courseName;
   final bool isFavorite;
-  final VoidCallback onToggleFavorite;
+  final VoidCallback onFavoriteChanged;
 
-  const CourseFavoriteChild({
+  const CourseCard({
     super.key,
     required this.courseName,
     required this.isFavorite,
-    required this.onToggleFavorite,
+    required this.onFavoriteChanged,
   });
 
   @override
@@ -181,20 +118,49 @@ class CourseFavoriteChild extends StatelessWidget {
         title: Text(courseName),
         subtitle: Text(
           isFavorite
-              ? 'Sudah ditambahkan ke favorit'
-              : 'Belum menjadi favorit',
+              ? 'Mata kuliah sudah difavoritkan'
+              : 'Mata kuliah belum difavoritkan',
         ),
         trailing: IconButton(
-          tooltip: isFavorite
-              ? 'Hapus dari favorit'
-              : 'Tambah ke favorit',
+          tooltip: 'Ubah status favorit',
+          onPressed: onFavoriteChanged,
           icon: Icon(
             isFavorite
                 ? Icons.favorite
                 : Icons.favorite_border,
             color: isFavorite ? Colors.red : null,
           ),
-          onPressed: onToggleFavorite,
+        ),
+      ),
+    );
+  }
+}
+
+// CHILD 2: Menerima nilai favorit yang sama dari parent.
+class FavoriteStatusCard extends StatelessWidget {
+  final bool isFavorite;
+
+  const FavoriteStatusCard({
+    super.key,
+    required this.isFavorite,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: isFavorite
+          ? Colors.red.shade50
+          : Colors.grey.shade100,
+      child: ListTile(
+        leading: Icon(
+          isFavorite ? Icons.check_circle : Icons.info_outline,
+          color: isFavorite ? Colors.green : Colors.grey,
+        ),
+        title: const Text('Status Favorit Saat Ini'),
+        subtitle: Text(
+          isFavorite
+              ? 'Favorit: Ya'
+              : 'Favorit: Tidak',
         ),
       ),
     );

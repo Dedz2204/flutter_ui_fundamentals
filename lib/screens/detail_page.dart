@@ -15,77 +15,68 @@ class DetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
-    final isFavorite = provider.isFavorite(course.code);
+    final favorite = provider.isFavorite(course.code);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detail Mata Kuliah'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Nama: Putu Agus Dedy Putra Adnyana',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Text('NIM: 2415051104'),
-            const SizedBox(height: 24),
-
             Text(
               course.title,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 12),
-
-            Text('Kode: ${course.code}'),
-            Text('SKS: ${course.credits}'),
-            Text('Status: ${course.status}'),
             const SizedBox(height: 20),
-
-            Row(
-              children: [
-                Icon(
-                  isFavorite
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  color: isFavorite ? Colors.red : Colors.grey,
+            _detailRow('Kode Mata Kuliah', course.code),
+            _detailRow('Jumlah SKS', '${course.credits}'),
+            _detailRow('Status', course.status),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context
+                      .read<CourseProvider>()
+                      .toggleFavorite(course.code);
+                },
+                icon: Icon(
+                  favorite ? Icons.favorite : Icons.favorite_border,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  isFavorite
-                      ? 'Status: Mata kuliah favorit'
-                      : 'Status: Belum menjadi favorit',
+                label: Text(
+                  favorite
+                      ? 'Hapus dari Favorit'
+                      : 'Tambah ke Favorit',
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            ElevatedButton.icon(
-              onPressed: () {
-                context
-                    .read<CourseProvider>()
-                    .toggleFavorite(course.code);
-              },
-              icon: Icon(
-                isFavorite
-                    ? Icons.favorite_border
-                    : Icons.favorite,
-              ),
-              label: Text(
-                isFavorite
-                    ? 'Hapus dari Favorit'
-                    : 'Tambahkan ke Favorit',
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(value),
+          ),
+        ],
       ),
     );
   }

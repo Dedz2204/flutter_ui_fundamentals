@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +12,7 @@ void main() {
     ChangeNotifierProvider(
       create: (_) => CourseProvider(
         CourseRepository(CourseService()),
-      ),
+      )..loadCourses(),
       child: const MyApp(),
     ),
   );
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
       title: 'Course Explorer v2',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: const Color(0xFF1976D2),
         ),
         useMaterial3: true,
       ),

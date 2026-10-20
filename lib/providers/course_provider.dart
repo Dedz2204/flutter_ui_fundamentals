@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import 'models/course.dart';
-import 'repositories/course_repository.dart';
+import '../models/course.dart';
+import '../repositories/course_repository.dart';
 
 class CourseProvider extends ChangeNotifier {
   final CourseRepository repository;

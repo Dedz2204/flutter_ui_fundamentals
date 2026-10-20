@@ -6,18 +6,21 @@ class CourseCard extends StatelessWidget {
   final Course course;
   final bool isFavorite;
   final VoidCallback onToggleFavorite;
+  final VoidCallback onTap;
 
   const CourseCard({
     super.key,
     required this.course,
     required this.isFavorite,
     required this.onToggleFavorite,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
+        onTap: onTap,
         leading: const Icon(Icons.menu_book),
         title: Text(course.title),
         subtitle: Text(
@@ -28,6 +31,9 @@ class CourseCard extends StatelessWidget {
         isThreeLine: true,
         trailing: IconButton(
           onPressed: onToggleFavorite,
+          tooltip: isFavorite
+              ? 'Hapus dari favorit'
+              : 'Tambahkan ke favorit',
           icon: Icon(
             isFavorite
                 ? Icons.favorite

@@ -18,6 +18,10 @@ class CourseProvider extends ChangeNotifier {
 
   int get favoriteCount => _favorites.length;
 
+  List<Course> get favoriteCourses => courses
+      .where((course) => _favorites.contains(course.code))
+      .toList();
+
   bool isFavorite(String code) {
     return _favorites.contains(code);
   }

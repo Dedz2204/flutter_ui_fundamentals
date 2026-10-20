@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,7 +27,7 @@ class MyApp extends StatelessWidget {
       title: 'Course Explorer v2',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1976D2),
+          seedColor: Colors.blue,
         ),
         useMaterial3: true,
       ),

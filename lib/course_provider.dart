@@ -1,14 +1,17 @@
 import 'package:flutter/foundation.dart';
+
 import 'models/course.dart';
+import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
 class CourseProvider extends ChangeNotifier {
-  CourseProvider({CourseService? courseService})
-      : _courseService = courseService ?? CourseService() {
+  CourseProvider({CourseRepository? repository})
+      : _repository = repository ??
+            CourseRepository(CourseService()) {
     loadCourses();
   }
 
-  final CourseService _courseService;
+  final CourseRepository _repository;
 
   List<Course> _courses = [];
   final Set<String> _favorites = {};
@@ -41,7 +44,7 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _courses = await _courseService.loadCourses();
+      _courses = await _repository.getCourses();
     } catch (e) {
       _error = 'Gagal memuat data mata kuliah: $e';
     } finally {

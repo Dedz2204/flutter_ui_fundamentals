@@ -12,155 +12,149 @@ class CourseExplorerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 3 - Lifting State Up',
+      title: 'Tahap 4 - ValueNotifier',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
         ),
         useMaterial3: true,
       ),
-      home: const FavoritePage(),
+      home: const FavoriteCounterPage(),
     );
   }
 }
 
-// PARENT: Satu-satunya pemilik state favorit.
-class FavoritePage extends StatefulWidget {
-  const FavoritePage({super.key});
+class FavoriteCounterPage extends StatefulWidget {
+  const FavoriteCounterPage({super.key});
 
   @override
-  State<FavoritePage> createState() => _FavoritePageState();
+  State<FavoriteCounterPage> createState() =>
+      _FavoriteCounterPageState();
 }
 
-class _FavoritePageState extends State<FavoritePage> {
-  bool favorite = false;
+class _FavoriteCounterPageState
+    extends State<FavoriteCounterPage> {
+  // ValueNotifier menyimpan satu nilai sederhana.
+  final ValueNotifier<int> favoriteCounter =
+      ValueNotifier<int>(0);
 
-  // Semua perubahan state dilakukan di parent.
-  void toggleFavorite() {
-    setState(() {
-      favorite = !favorite;
-    });
+  // Mengubah nilai tanpa memanggil setState().
+  void increaseFavorite() {
+    favoriteCounter.value++;
+  }
+
+  void decreaseFavorite() {
+    if (favoriteCounter.value > 0) {
+      favoriteCounter.value--;
+    }
+  }
+
+  void resetFavorite() {
+    favoriteCounter.value = 0;
+  }
+
+  @override
+  void dispose() {
+    favoriteCounter.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lifting State Up'),
+        title: const Text('ValueNotifier'),
         backgroundColor:
             Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Putu Agus Dedy Putra Adnyana',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Putu Agus Dedy Putra Adnyana',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text('NIM: 2415051104'),
+              const SizedBox(height: 32),
+
+              const Icon(
+                Icons.favorite,
+                color: Colors.red,
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+
+              const Text(
+                'Jumlah Favorit',
+                style: TextStyle(fontSize: 20),
+              ),
+              const SizedBox(height: 12),
+
+              // Widget ini mendengarkan perubahan nilai.
+              ValueListenableBuilder<int>(
+                valueListenable: favoriteCounter,
+                builder: (context, value, child) {
+                  return Text(
+                    '$value',
+                    style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton.filled(
+                    onPressed: decreaseFavorite,
+                    icon: const Icon(Icons.remove),
+                    tooltip: 'Kurangi favorit',
+                  ),
+                  const SizedBox(width: 16),
+                  IconButton.filled(
+                    onPressed: increaseFavorite,
+                    icon: const Icon(Icons.add),
+                    tooltip: 'Tambah favorit',
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              OutlinedButton(
+                onPressed: resetFavorite,
+                child: const Text('Reset'),
+              ),
+
+              const SizedBox(height: 24),
+
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'ValueNotifier memperbarui widget '
+                    'yang mendengarkan nilainya melalui '
+                    'ValueListenableBuilder. Perubahan '
+                    'angka tidak memerlukan pemanggilan '
+                    'setState() pada parent.',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const Text('NIM: 2415051104'),
-          const SizedBox(height: 24),
-
-          const Text(
-            'Single Source of Truth',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Status favorit disimpan pada parent. '
-            'Dua widget di bawah menerima nilai yang sama '
-            'melalui constructor.',
-          ),
-          const SizedBox(height: 20),
-
-          // CHILD 1: Menampilkan status dan tombol perubahan.
-          CourseCard(
-            courseName: 'Jaringan Komputer',
-            isFavorite: favorite,
-            onFavoriteChanged: toggleFavorite,
-          ),
-
-          const SizedBox(height: 16),
-
-          // CHILD 2: Menampilkan status dari sumber yang sama.
-          FavoriteStatusCard(
-            isFavorite: favorite,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// CHILD 1: Tidak menyimpan salinan state favorit.
-class CourseCard extends StatelessWidget {
-  final String courseName;
-  final bool isFavorite;
-  final VoidCallback onFavoriteChanged;
-
-  const CourseCard({
-    super.key,
-    required this.courseName,
-    required this.isFavorite,
-    required this.onFavoriteChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.menu_book),
-        title: Text(courseName),
-        subtitle: Text(
-          isFavorite
-              ? 'Mata kuliah sudah difavoritkan'
-              : 'Mata kuliah belum difavoritkan',
-        ),
-        trailing: IconButton(
-          tooltip: 'Ubah status favorit',
-          onPressed: onFavoriteChanged,
-          icon: Icon(
-            isFavorite
-                ? Icons.favorite
-                : Icons.favorite_border,
-            color: isFavorite ? Colors.red : null,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// CHILD 2: Menerima nilai favorit yang sama dari parent.
-class FavoriteStatusCard extends StatelessWidget {
-  final bool isFavorite;
-
-  const FavoriteStatusCard({
-    super.key,
-    required this.isFavorite,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: isFavorite
-          ? Colors.red.shade50
-          : Colors.grey.shade100,
-      child: ListTile(
-        leading: Icon(
-          isFavorite ? Icons.check_circle : Icons.info_outline,
-          color: isFavorite ? Colors.green : Colors.grey,
-        ),
-        title: const Text('Status Favorit Saat Ini'),
-        subtitle: Text(
-          isFavorite
-              ? 'Favorit: Ya'
-              : 'Favorit: Tidak',
         ),
       ),
     );

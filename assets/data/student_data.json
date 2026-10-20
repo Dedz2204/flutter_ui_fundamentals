@@ -1,40 +1,22 @@
 {
-  "student": {
-    "nim": "2415051104",
-    "name": "Putu Agus Dedy Putra Adnyana",
-    "semester": 5
-  },
-
   "courses": [
     {
-      "code": "MOB01",
-      "title": "Git & GitHub",
-      "credits": 2,
-      "status": "done"
-    },
-    {
-      "code": "MOB02",
-      "title": "Dart Fundamentals",
-      "credits": 2,
-      "status": "done"
-    },
-    {
-      "code": "MOB03",
-      "title": "Flutter UI Fundamentals",
+      "code": "JK",
+      "title": "Jaringan Komputer",
       "credits": 3,
-      "status": "active"
+      "status": "Aktif"
     },
     {
-      "code": "MOB04",
-      "title": "Navigation",
-      "credits": 2,
-      "status": "planned"
-    },
-    {
-      "code": "MOB05",
-      "title": "State Management",
+      "code": "PBO",
+      "title": "Pemrograman Berorientasi Objek",
       "credits": 3,
-      "status": "planned"
+      "status": "Aktif"
+    },
+    {
+      "code": "PBM",
+      "title": "Pemrograman Berbasis Mobile",
+      "credits": 3,
+      "status": "Aktif"
     }
   ]
 }

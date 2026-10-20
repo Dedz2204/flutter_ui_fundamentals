@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'course_provider.dart';
-import 'models/course.dart';
 
 void main() {
   runApp(
@@ -20,7 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Model Course',
+      title: 'Service Data Source',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -33,30 +32,9 @@ class MyApp extends StatelessWidget {
 class CoursePage extends StatelessWidget {
   const CoursePage({super.key});
 
-  // Data JSON contoh yang diubah menjadi objek Course.
-  List<Course> get courses {
-    final List<Map<String, dynamic>> jsonData = [
-      {
-        'code': 'JK',
-        'title': 'Jaringan Komputer',
-        'credits': 3,
-        'status': 'Aktif',
-      },
-      {
-        'code': 'PBO',
-        'title': 'Pemrograman Berorientasi Objek',
-        'credits': 3,
-        'status': 'Aktif',
-      },
-    ];
-
-    return jsonData.map((json) => Course.fromJson(json)).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
-    final courseList = courses;
 
     return Scaffold(
       appBar: AppBar(
@@ -94,50 +72,59 @@ class CoursePage extends StatelessWidget {
             ),
 
             const SizedBox(height: 12),
-            const Text(
-              'Data Mata Kuliah dari JSON',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
 
-            Expanded(
-              child: ListView.builder(
-                itemCount: courseList.length,
-                itemBuilder: (context, index) {
-                  final Course course = courseList[index];
-                  final isFavorite = provider.isFavorite(course.code);
+            if (provider.isLoading)
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (provider.error != null)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    provider.error!,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: provider.courses.length,
+                  itemBuilder: (context, index) {
+                    final course = provider.courses[index];
+                    final isFavorite =
+                        provider.isFavorite(course.code);
 
-                  return Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.menu_book),
-                      title: Text(course.title),
-                      subtitle: Text(
-                        'Kode: ${course.code}\n'
-                        'SKS: ${course.credits}\n'
-                        'Status: ${course.status}',
-                      ),
-                      isThreeLine: true,
-                      trailing: IconButton(
-                        onPressed: () {
-                          context
-                              .read<CourseProvider>()
-                              .toggleFavorite(course.code);
-                        },
-                        icon: Icon(
-                          isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: isFavorite ? Colors.red : Colors.grey,
+                    return Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.menu_book),
+                        title: Text(course.title),
+                        subtitle: Text(
+                          'Kode: ${course.code}\n'
+                          'SKS: ${course.credits}\n'
+                          'Status: ${course.status}',
+                        ),
+                        isThreeLine: true,
+                        trailing: IconButton(
+                          onPressed: () {
+                            context
+                                .read<CourseProvider>()
+                                .toggleFavorite(course.code);
+                          },
+                          icon: Icon(
+                            isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: isFavorite
+                                ? Colors.red
+                                : Colors.grey,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ),

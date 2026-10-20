@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
-import 'course_state.dart';
+import 'package:provider/provider.dart';
+
+import 'course_provider.dart';
 
 void main() {
-  runApp(const CourseExplorerApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CourseProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
-class CourseExplorerApp extends StatelessWidget {
-  const CourseExplorerApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 5 - ChangeNotifier',
+      title: 'Tahap 6 - Provider',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
@@ -24,28 +31,17 @@ class CourseExplorerApp extends StatelessWidget {
   }
 }
 
-class CoursePage extends StatefulWidget {
+class CoursePage extends StatelessWidget {
   const CoursePage({super.key});
 
   @override
-  State<CoursePage> createState() => _CoursePageState();
-}
-
-class _CoursePageState extends State<CoursePage> {
-  // Object state dibuat satu kali dan digunakan bersama.
-  final CourseState courseState = CourseState();
-
-  @override
-  void dispose() {
-    courseState.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final favoriteCount = context.watch<CourseProvider>()
+        .favoriteCount;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ChangeNotifier'),
+        title: const Text('Provider pada Widget Tree'),
         backgroundColor:
             Theme.of(context).colorScheme.inversePrimary,
       ),
@@ -62,6 +58,25 @@ class _CoursePageState extends State<CoursePage> {
           const Text('NIM: 2415051104'),
           const SizedBox(height: 24),
 
+          Card(
+            child: ListTile(
+              leading: const Icon(
+                Icons.favorite,
+                color: Colors.red,
+              ),
+              title: const Text('Jumlah Favorit'),
+              trailing: Text(
+                '$favoriteCount',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           const Text(
             'Daftar Mata Kuliah',
             style: TextStyle(
@@ -69,35 +84,10 @@ class _CoursePageState extends State<CoursePage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
-
-          // Menampilkan jumlah favorit yang selalu diperbarui.
-          AnimatedBuilder(
-            animation: courseState,
-            builder: (context, child) {
-              return Card(
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.favorite,
-                    color: Colors.red,
-                  ),
-                  title: const Text('Jumlah Favorit'),
-                  trailing: Text(
-                    '${courseState.favoriteCount}',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
 
           const SizedBox(height: 12),
 
-          CourseFavoriteCard(
-            courseState: courseState,
+          const CourseCard(
             courseId: 'jaringan',
             courseName: 'Jaringan Komputer',
             description:
@@ -106,8 +96,7 @@ class _CoursePageState extends State<CoursePage> {
 
           const SizedBox(height: 12),
 
-          CourseFavoriteCard(
-            courseState: courseState,
+          const CourseCard(
             courseId: 'pemrograman',
             courseName: 'Pemrograman',
             description:
@@ -120,10 +109,11 @@ class _CoursePageState extends State<CoursePage> {
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                'CourseState mengelola state favorit. '
-                'Ketika toggleFavorite() dipanggil, '
-                'notifyListeners() memberi tahu widget '
-                'yang mendengarkan agar memperbarui tampilan.',
+                'CourseProvider disediakan pada widget tree '
+                'melalui ChangeNotifierProvider. Widget yang '
+                'membutuhkan data dapat mengaksesnya dengan '
+                'Provider tanpa meneruskan object melalui '
+                'constructor setiap widget.',
               ),
             ),
           ),
@@ -133,16 +123,13 @@ class _CoursePageState extends State<CoursePage> {
   }
 }
 
-// Widget child yang mendengarkan perubahan CourseState.
-class CourseFavoriteCard extends StatelessWidget {
-  final CourseState courseState;
+class CourseCard extends StatelessWidget {
   final String courseId;
   final String courseName;
   final String description;
 
-  const CourseFavoriteCard({
+  const CourseCard({
     super.key,
-    required this.courseState,
     required this.courseId,
     required this.courseName,
     required this.description,
@@ -150,38 +137,35 @@ class CourseFavoriteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: courseState,
-      builder: (context, child) {
-        final bool isFavorite =
-            courseState.isFavorite(courseId);
+    final provider = context.watch<CourseProvider>();
+    final isFavorite = provider.isFavorite(courseId);
 
-        return Card(
-          child: ListTile(
-            leading: const Icon(Icons.menu_book),
-            title: Text(courseName),
-            subtitle: Text(
-              '$description\n'
-              '${isFavorite ? "Sudah menjadi favorit" : "Belum menjadi favorit"}',
-            ),
-            isThreeLine: true,
-            trailing: IconButton(
-              tooltip: isFavorite
-                  ? 'Hapus dari favorit'
-                  : 'Tambah ke favorit',
-              onPressed: () {
-                courseState.toggleFavorite(courseId);
-              },
-              icon: Icon(
-                isFavorite
-                    ? Icons.favorite
-                    : Icons.favorite_border,
-                color: isFavorite ? Colors.red : null,
-              ),
-            ),
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.menu_book),
+        title: Text(courseName),
+        subtitle: Text(
+          '$description\n'
+          '${isFavorite ? "Sudah menjadi favorit" : "Belum menjadi favorit"}',
+        ),
+        isThreeLine: true,
+        trailing: IconButton(
+          tooltip: isFavorite
+              ? 'Hapus dari favorit'
+              : 'Tambah ke favorit',
+          onPressed: () {
+            context
+                .read<CourseProvider>()
+                .toggleFavorite(courseId);
+          },
+          icon: Icon(
+            isFavorite
+                ? Icons.favorite
+                : Icons.favorite_border,
+            color: isFavorite ? Colors.red : null,
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

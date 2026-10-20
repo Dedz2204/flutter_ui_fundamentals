@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'course_state.dart';
 
 void main() {
   runApp(const CourseExplorerApp());
@@ -12,50 +12,32 @@ class CourseExplorerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tahap 4 - ValueNotifier',
+      title: 'Tahap 5 - ChangeNotifier',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
         ),
         useMaterial3: true,
       ),
-      home: const FavoriteCounterPage(),
+      home: const CoursePage(),
     );
   }
 }
 
-class FavoriteCounterPage extends StatefulWidget {
-  const FavoriteCounterPage({super.key});
+class CoursePage extends StatefulWidget {
+  const CoursePage({super.key});
 
   @override
-  State<FavoriteCounterPage> createState() =>
-      _FavoriteCounterPageState();
+  State<CoursePage> createState() => _CoursePageState();
 }
 
-class _FavoriteCounterPageState
-    extends State<FavoriteCounterPage> {
-  // ValueNotifier menyimpan satu nilai sederhana.
-  final ValueNotifier<int> favoriteCounter =
-      ValueNotifier<int>(0);
-
-  // Mengubah nilai tanpa memanggil setState().
-  void increaseFavorite() {
-    favoriteCounter.value++;
-  }
-
-  void decreaseFavorite() {
-    if (favoriteCounter.value > 0) {
-      favoriteCounter.value--;
-    }
-  }
-
-  void resetFavorite() {
-    favoriteCounter.value = 0;
-  }
+class _CoursePageState extends State<CoursePage> {
+  // Object state dibuat satu kali dan digunakan bersama.
+  final CourseState courseState = CourseState();
 
   @override
   void dispose() {
-    favoriteCounter.dispose();
+    courseState.dispose();
     super.dispose();
   }
 
@@ -63,100 +45,143 @@ class _FavoriteCounterPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ValueNotifier'),
+        title: const Text('ChangeNotifier'),
         backgroundColor:
             Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Putu Agus Dedy Putra Adnyana',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text('NIM: 2415051104'),
-              const SizedBox(height: 32),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'Putu Agus Dedy Putra Adnyana',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Text('NIM: 2415051104'),
+          const SizedBox(height: 24),
 
-              const Icon(
-                Icons.favorite,
-                color: Colors.red,
-                size: 64,
-              ),
-              const SizedBox(height: 16),
+          const Text(
+            'Daftar Mata Kuliah',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
 
-              const Text(
-                'Jumlah Favorit',
-                style: TextStyle(fontSize: 20),
-              ),
-              const SizedBox(height: 12),
-
-              // Widget ini mendengarkan perubahan nilai.
-              ValueListenableBuilder<int>(
-                valueListenable: favoriteCounter,
-                builder: (context, value, child) {
-                  return Text(
-                    '$value',
+          // Menampilkan jumlah favorit yang selalu diperbarui.
+          AnimatedBuilder(
+            animation: courseState,
+            builder: (context, child) {
+              return Card(
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.favorite,
+                    color: Colors.red,
+                  ),
+                  title: const Text('Jumlah Favorit'),
+                  trailing: Text(
+                    '${courseState.favoriteCount}',
                     style: const TextStyle(
-                      fontSize: 48,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton.filled(
-                    onPressed: decreaseFavorite,
-                    icon: const Icon(Icons.remove),
-                    tooltip: 'Kurangi favorit',
-                  ),
-                  const SizedBox(width: 16),
-                  IconButton.filled(
-                    onPressed: increaseFavorite,
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Tambah favorit',
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              OutlinedButton(
-                onPressed: resetFavorite,
-                child: const Text('Reset'),
-              ),
-
-              const SizedBox(height: 24),
-
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'ValueNotifier memperbarui widget '
-                    'yang mendengarkan nilainya melalui '
-                    'ValueListenableBuilder. Perubahan '
-                    'angka tidak memerlukan pemanggilan '
-                    'setState() pada parent.',
-                    textAlign: TextAlign.center,
                   ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
-        ),
+
+          const SizedBox(height: 12),
+
+          CourseFavoriteCard(
+            courseState: courseState,
+            courseId: 'jaringan',
+            courseName: 'Jaringan Komputer',
+            description:
+                'Mempelajari perangkat dan komunikasi jaringan.',
+          ),
+
+          const SizedBox(height: 12),
+
+          CourseFavoriteCard(
+            courseState: courseState,
+            courseId: 'pemrograman',
+            courseName: 'Pemrograman',
+            description:
+                'Mempelajari logika dan pembuatan program.',
+          ),
+
+          const SizedBox(height: 20),
+
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'CourseState mengelola state favorit. '
+                'Ketika toggleFavorite() dipanggil, '
+                'notifyListeners() memberi tahu widget '
+                'yang mendengarkan agar memperbarui tampilan.',
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+// Widget child yang mendengarkan perubahan CourseState.
+class CourseFavoriteCard extends StatelessWidget {
+  final CourseState courseState;
+  final String courseId;
+  final String courseName;
+  final String description;
+
+  const CourseFavoriteCard({
+    super.key,
+    required this.courseState,
+    required this.courseId,
+    required this.courseName,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: courseState,
+      builder: (context, child) {
+        final bool isFavorite =
+            courseState.isFavorite(courseId);
+
+        return Card(
+          child: ListTile(
+            leading: const Icon(Icons.menu_book),
+            title: Text(courseName),
+            subtitle: Text(
+              '$description\n'
+              '${isFavorite ? "Sudah menjadi favorit" : "Belum menjadi favorit"}',
+            ),
+            isThreeLine: true,
+            trailing: IconButton(
+              tooltip: isFavorite
+                  ? 'Hapus dari favorit'
+                  : 'Tambah ke favorit',
+              onPressed: () {
+                courseState.toggleFavorite(courseId);
+              },
+              icon: Icon(
+                isFavorite
+                    ? Icons.favorite
+                    : Icons.favorite_border,
+                color: isFavorite ? Colors.red : null,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

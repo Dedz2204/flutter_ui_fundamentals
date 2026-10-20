@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'course_provider.dart';
+import 'models/course.dart';
 
 void main() {
   runApp(
@@ -18,7 +20,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Praktikum Provider',
+      title: 'Model Course',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
@@ -31,21 +33,34 @@ class MyApp extends StatelessWidget {
 class CoursePage extends StatelessWidget {
   const CoursePage({super.key});
 
-  final List<Map<String, String>> courses = const [
-    {'code': 'JK', 'name': 'Jaringan Komputer'},
-    {'code': 'PBM', 'name': 'Pemrograman Berbasis Mobile'},
-    {'code': 'BD', 'name': 'Basis Data'},
-    {'code': 'AI', 'name': 'Artificial Intelligence'},
-  ];
+  // Data JSON contoh yang diubah menjadi objek Course.
+  List<Course> get courses {
+    final List<Map<String, dynamic>> jsonData = [
+      {
+        'code': 'JK',
+        'title': 'Jaringan Komputer',
+        'credits': 3,
+        'status': 'Aktif',
+      },
+      {
+        'code': 'PBO',
+        'title': 'Pemrograman Berorientasi Objek',
+        'credits': 3,
+        'status': 'Aktif',
+      },
+    ];
+
+    return jsonData.map((json) => Course.fromJson(json)).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // watch: halaman mendengarkan perubahan jumlah favorit.
     final provider = context.watch<CourseProvider>();
+    final courseList = courses;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Praktikum Provider'),
+        title: const Text('Daftar Mata Kuliah'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
@@ -59,57 +74,57 @@ class CoursePage extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const Text('NIM: 2415051104'),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
-            // Consumer: membatasi rebuild pada bagian jumlah favorit.
-            Consumer<CourseProvider>(
-              builder: (context, courseProvider, child) {
-                return Card(
-                  child: ListTile(
-                    leading: const Icon(
-                      Icons.favorite,
-                      color: Colors.red,
-                    ),
-                    title: const Text('Jumlah Favorit'),
-                    trailing: Text(
-                      '${courseProvider.favoriteCount}',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+            Card(
+              child: ListTile(
+                leading: const Icon(
+                  Icons.favorite,
+                  color: Colors.red,
+                ),
+                title: const Text('Jumlah Favorit'),
+                trailing: Text(
+                  '${provider.favoriteCount}',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
-              },
+                ),
+              ),
             ),
 
             const SizedBox(height: 12),
             const Text(
-              'Daftar Mata Kuliah',
+              'Data Mata Kuliah dari JSON',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 8),
 
             Expanded(
               child: ListView.builder(
-                itemCount: courses.length,
+                itemCount: courseList.length,
                 itemBuilder: (context, index) {
-                  final course = courses[index];
-                  final isFavorite =
-                      provider.isFavorite(course['code']!);
+                  final Course course = courseList[index];
+                  final isFavorite = provider.isFavorite(course.code);
 
                   return Card(
                     child: ListTile(
-                      title: Text(course['name']!),
-                      subtitle: Text('Kode: ${course['code']}'),
+                      leading: const Icon(Icons.menu_book),
+                      title: Text(course.title),
+                      subtitle: Text(
+                        'Kode: ${course.code}\n'
+                        'SKS: ${course.credits}\n'
+                        'Status: ${course.status}',
+                      ),
+                      isThreeLine: true,
                       trailing: IconButton(
-                        // read: memanggil aksi tanpa listen.
                         onPressed: () {
                           context
                               .read<CourseProvider>()
-                              .toggleFavorite(course['code']!);
+                              .toggleFavorite(course.code);
                         },
                         icon: Icon(
                           isFavorite

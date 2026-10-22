@@ -29,3 +29,26 @@ samples, guidance on mobile development, and a full API reference.
 ### Arah Dependency
 
 Arah dependency aplikasi adalah Screens/Widgets → Provider → Repository → Service/Data Source. UI tidak membaca JSON secara langsung, Service tidak menangani tampilan, dan Provider tidak menyimpan BuildContext sebagai state.
+
+## Tahap 1 — Membaca REST Endpoint dan JSON
+
+### Informasi Endpoint
+
+- **URL:** https://jsonplaceholder.typicode.com/posts/1
+- **HTTP Method:** GET
+- **Status Code:** 200 OK (jika request berhasil)
+- **Resource:** Post
+- **Response Format:** JSON
+
+### Struktur Response
+
+| Field | Tipe Data | Keterangan |
+|---|---|---|
+| `userId` | Integer | ID pengguna pemilik post |
+| `id` | Integer | ID post |
+| `title` | String | Judul post |
+| `body` | String | Isi post |
+
+### Catatan
+
+Endpoint ini digunakan untuk mengambil satu data post dari JSONPlaceholder. JSONPlaceholder merupakan API dummy untuk latihan. Operasi penulisan seperti POST, PUT, PATCH, dan DELETE hanya disimulasikan sehingga perubahan tidak disimpan secara permanen.

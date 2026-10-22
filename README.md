@@ -52,3 +52,28 @@ Arah dependency aplikasi adalah Screens/Widgets → Provider → Repository → 
 ### Catatan
 
 Endpoint ini digunakan untuk mengambil satu data post dari JSONPlaceholder. JSONPlaceholder merupakan API dummy untuk latihan. Operasi penulisan seperti POST, PUT, PATCH, dan DELETE hanya disimulasikan sehingga perubahan tidak disimpan secara permanen.
+
+## Tahap 2 — HTTP GET dari Flutter
+
+### Endpoint API
+- **URL:** https://jsonplaceholder.typicode.com/posts/1
+- **HTTP Method:** GET
+- **Status Code:** 200 OK
+- **Format Response:** JSON
+
+### Implementasi
+Request HTTP GET dilakukan menggunakan package `http` pada Flutter. Response diperiksa melalui `statusCode` sebelum diproses menggunakan `jsonDecode`.
+
+Data JSON yang diterima memiliki empat field:
+- `userId`: ID pengguna pemilik post.
+- `id`: ID post.
+- `title`: Judul post.
+- `body`: Isi post.
+
+Jumlah field JSON ditampilkan menggunakan `debugPrint`.
+
+### Pengujian Error
+Endpoint diubah sementara menjadi URL yang tidak valid untuk menguji penanganan error. Hasil pengujian menunjukkan status HTTP `404` dan exception ditampilkan melalui `debugPrint`. Setelah pengujian, endpoint dikembalikan ke URL yang benar.
+
+### Catatan/Temuan
+Pengujian HTTP GET berhasil dengan status `200`, dan response JSON berhasil diproses. Pengujian endpoint yang tidak valid menghasilkan status `404` dan ditangani oleh mekanisme exception.

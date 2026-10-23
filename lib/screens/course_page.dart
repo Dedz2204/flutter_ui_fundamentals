@@ -1,9 +1,11 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
+import 'add_course_page.dart';
 import 'detail_page.dart';
 import 'favorites_page.dart';
 
@@ -31,6 +33,7 @@ class _CoursePageState extends State<CoursePage> {
 
         return Scaffold(
           backgroundColor: const Color(0xFFF3F7FB),
+
           appBar: AppBar(
             title: const Text(
               'Course Explorer v2',
@@ -39,6 +42,23 @@ class _CoursePageState extends State<CoursePage> {
             backgroundColor: const Color(0xFF1976D2),
             foregroundColor: Colors.white,
           ),
+
+          // Tombol tambah hanya muncul pada halaman Courses.
+          floatingActionButton: _selectedIndex == 1
+              ? FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AddCoursePage(),
+                      ),
+                    );
+                  },
+                  tooltip: 'Tambah mata kuliah',
+                  child: const Icon(Icons.add),
+                )
+              : null,
+
           body: Row(
             children: [
               if (isWide)
@@ -73,6 +93,7 @@ class _CoursePageState extends State<CoursePage> {
               ),
             ],
           ),
+
           bottomNavigationBar: isWide
               ? null
               : BottomNavigationBar(

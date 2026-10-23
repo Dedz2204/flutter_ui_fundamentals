@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +7,7 @@ import '../widgets/error_view.dart';
 import 'add_course_page.dart';
 import 'detail_page.dart';
 import 'favorites_page.dart';
+import 'edit_course_page.dart';
 
 class CoursePage extends StatefulWidget {
   const CoursePage({super.key});
@@ -360,27 +360,61 @@ class _CoursePageState extends State<CoursePage> {
       children: [
         const Text(
           'Nama: $studentName',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const Text('NIM: $studentNim'),
         const SizedBox(height: 16),
+
         ...provider.courses.map((course) {
-          return CourseCard(
-            course: course,
-            isFavorite: provider.isFavorite(course.code),
-            onToggleFavorite: () {
-              context
-                  .read<CourseProvider>()
-                  .toggleFavorite(course.code);
-            },
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DetailPage(course: course),
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: CourseCard(
+                  course: course,
+                  isFavorite: provider.isFavorite(course.code),
+                  onToggleFavorite: () {
+                    context
+                        .read<CourseProvider>()
+                        .toggleFavorite(course.code);
+                  },
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DetailPage(course: course),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+              IconButton(
+                tooltip: 'Edit mata kuliah',
+                icon: const Icon(Icons.edit),
+                onPressed: () async {
+                  final updated = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditCoursePage(course: course),
+                    ),
+                  );
+
+                  if (!mounted) return;
+
+                  if (updated == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Mata kuliah berhasil diperbarui',
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
           );
         }),
       ],

@@ -10,9 +10,7 @@ class CourseApiService {
   final String baseUrl;
 
   Future<List<Course>> getCourses() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/posts'),
-    );
+    final response = await http.get(Uri.parse('$baseUrl/posts'));
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -49,9 +47,7 @@ class CourseApiService {
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
       body: jsonEncode({
         'code': course.code,
         'title': course.title,
@@ -60,8 +56,7 @@ class CourseApiService {
       }),
     );
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       final decoded = jsonDecode(response.body);
 
       if (decoded is! Map<String, dynamic>) {
@@ -77,8 +72,28 @@ class CourseApiService {
       );
     }
 
-    throw Exception(
-      'Gagal membuat course. Kode HTTP: ${response.statusCode}',
+    throw Exception('Gagal membuat course. Kode HTTP: ${response.statusCode}');
+  }
+
+  // Tahap 7: Memperbarui mata kuliah menggunakan HTTP PUT.
+  Future<void> updateCourse(int id, Course course) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/posts/$id'),
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: jsonEncode({
+        'id': id,
+        'code': course.code,
+        'title': course.title,
+        'credits': course.credits,
+        'status': course.status,
+      }),
     );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Gagal memperbarui mata kuliah. '
+        'Kode HTTP: ${response.statusCode}',
+      );
+    }
   }
 }

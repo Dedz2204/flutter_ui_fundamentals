@@ -22,9 +22,7 @@ class CourseProvider extends ChangeNotifier {
   int get favoriteCount => _favorites.length;
 
   List<Course> get favoriteCourses {
-    return courses
-        .where((course) => _favorites.contains(course.code))
-        .toList();
+    return courses.where((course) => _favorites.contains(course.code)).toList();
   }
 
   bool isFavorite(String code) {
@@ -42,7 +40,6 @@ class CourseProvider extends ChangeNotifier {
   }
 
   // Menggabungkan data API dan data hasil POST.
-  // Data dengan kode sama tidak akan ditampilkan dua kali.
   List<Course> _mergeCourses(
     List<Course> apiCourses,
     List<Course> createdCourses,
@@ -62,9 +59,7 @@ class CourseProvider extends ChangeNotifier {
     }
 
     for (final course in createdCourses) {
-      final alreadyExists = merged.any(
-        (item) => item.code == course.code,
-      );
+      final alreadyExists = merged.any((item) => item.code == course.code);
 
       if (!alreadyExists) {
         merged.add(course);
@@ -82,13 +77,11 @@ class CourseProvider extends ChangeNotifier {
     try {
       final apiCourses = await repository.getCourses();
 
-      // Refresh data API tanpa menghilangkan hasil POST sebelumnya.
       courses = _mergeCourses(apiCourses, _createdCourses);
       error = null;
     } catch (e) {
       error = e.toString();
 
-      // Jika refresh gagal, pertahankan daftar yang sudah ada.
       if (courses.isEmpty && _createdCourses.isNotEmpty) {
         courses = List<Course>.from(_createdCourses);
       }
@@ -108,10 +101,8 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Kirim data melalui Repository ke API.
       final createdCourse = await repository.createCourse(course);
 
-      // Simpan hasil POST di memori selama aplikasi berjalan.
       final existingIndex = _createdCourses.indexWhere(
         (item) => item.code == createdCourse.code,
       );
@@ -124,7 +115,6 @@ class CourseProvider extends ChangeNotifier {
 
       try {
         final apiCourses = await repository.getCourses();
-
         courses = _mergeCourses(apiCourses, _createdCourses);
       } catch (_) {
         courses = _mergeCourses(courses, _createdCourses);
@@ -132,6 +122,51 @@ class CourseProvider extends ChangeNotifier {
 
       error = null;
       return createdCourse;
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  // Tahap 7: Memperbarui mata kuliah menggunakan HTTP PUT.
+  Future<void> updateCourse(Course course) async {
+    if (isSaving) {
+      throw Exception('Proses penyimpanan sedang berlangsung.');
+    }
+
+    final courseId = course.id;
+
+    if (courseId == null) {
+      throw Exception('ID mata kuliah tidak ditemukan.');
+    }
+
+    isSaving = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      await repository.updateCourse(courseId, course);
+
+      // Perbarui data lokal agar hasil edit langsung terlihat.
+      final courseIndex = courses.indexWhere((item) => item.id == courseId);
+
+      if (courseIndex >= 0) {
+        courses[courseIndex] = course;
+      }
+
+      // Perbarui data POST yang tersimpan di memori.
+      final createdIndex = _createdCourses.indexWhere(
+        (item) => item.id == courseId,
+      );
+
+      if (createdIndex >= 0) {
+        _createdCourses[createdIndex] = course;
+      }
+
+      error = null;
     } catch (e) {
       error = e.toString();
       rethrow;

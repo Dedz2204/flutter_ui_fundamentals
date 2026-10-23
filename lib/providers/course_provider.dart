@@ -1,13 +1,12 @@
-
 import 'package:flutter/foundation.dart';
 
 import '../models/course.dart';
 import '../repositories/course_repository.dart';
 
 class CourseProvider extends ChangeNotifier {
-  final CourseRepository repository;
-
   CourseProvider(this.repository);
+
+  final CourseRepository repository;
 
   List<Course> courses = [];
   final Set<String> _favorites = {};
@@ -43,7 +42,8 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      courses = await repository.getCourses();
+      final loadedCourses = await repository.getCourses();
+      courses = loadedCourses;
     } catch (e) {
       error = e.toString();
       courses = [];

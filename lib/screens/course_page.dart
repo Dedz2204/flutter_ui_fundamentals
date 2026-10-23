@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
+import '../widgets/error_view.dart';
 import 'detail_page.dart';
 import 'favorites_page.dart';
 
@@ -34,9 +34,7 @@ class _CoursePageState extends State<CoursePage> {
           appBar: AppBar(
             title: const Text(
               'Course Explorer v2',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: const Color(0xFF1976D2),
             foregroundColor: Colors.white,
@@ -131,21 +129,15 @@ class _CoursePageState extends State<CoursePage> {
     }
 
     if (provider.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(
-            'Gagal memuat data: ${provider.error}',
-            textAlign: TextAlign.center,
-          ),
-        ),
+      return ErrorView(
+        message: provider.error!,
+        onRetry: provider.loadCourses,
       );
     }
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        // Identitas mahasiswa
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -174,10 +166,7 @@ class _CoursePageState extends State<CoursePage> {
             ],
           ),
         ),
-
         const SizedBox(height: 18),
-
-        // Ringkasan jumlah course dan favorites
         Row(
           children: [
             Expanded(
@@ -197,9 +186,7 @@ class _CoursePageState extends State<CoursePage> {
             ),
           ],
         ),
-
         const SizedBox(height: 24),
-
         const Text(
           'My Courses',
           style: TextStyle(
@@ -208,11 +195,9 @@ class _CoursePageState extends State<CoursePage> {
             color: Color(0xFF20466F),
           ),
         ),
-
         const SizedBox(height: 12),
-
         if (provider.courses.isEmpty)
-          const Text('Belum ada mata kuliah.')
+          const Text('Data course belum tersedia')
         else
           ...provider.courses.map((course) {
             return Card(
@@ -337,20 +322,15 @@ class _CoursePageState extends State<CoursePage> {
     }
 
     if (provider.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(
-            'Gagal memuat data: ${provider.error}',
-            textAlign: TextAlign.center,
-          ),
-        ),
+      return ErrorView(
+        message: provider.error!,
+        onRetry: provider.loadCourses,
       );
     }
 
     if (provider.courses.isEmpty) {
       return const Center(
-        child: Text('Belum ada data mata kuliah.'),
+        child: Text('Data course belum tersedia'),
       );
     }
 

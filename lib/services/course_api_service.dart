@@ -9,6 +9,7 @@ class CourseApiService {
 
   final String baseUrl;
 
+  // Mengambil daftar mata kuliah menggunakan HTTP GET.
   Future<List<Course>> getCourses() async {
     final response = await http.get(Uri.parse('$baseUrl/posts'));
 
@@ -44,6 +45,7 @@ class CourseApiService {
     }).toList();
   }
 
+  // Menambahkan mata kuliah menggunakan HTTP POST.
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
@@ -72,10 +74,12 @@ class CourseApiService {
       );
     }
 
-    throw Exception('Gagal membuat course. Kode HTTP: ${response.statusCode}');
+    throw Exception(
+      'Gagal membuat course. Kode HTTP: ${response.statusCode}',
+    );
   }
 
-  // Tahap 7: Memperbarui mata kuliah menggunakan HTTP PUT.
+  // Memperbarui mata kuliah menggunakan HTTP PUT.
   Future<void> updateCourse(int id, Course course) async {
     final response = await http.put(
       Uri.parse('$baseUrl/posts/$id'),
@@ -92,6 +96,20 @@ class CourseApiService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
         'Gagal memperbarui mata kuliah. '
+        'Kode HTTP: ${response.statusCode}',
+      );
+    }
+  }
+
+  // Menghapus mata kuliah menggunakan HTTP DELETE.
+  Future<void> deleteCourse(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/posts/$id'),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Gagal menghapus mata kuliah. '
         'Kode HTTP: ${response.statusCode}',
       );
     }

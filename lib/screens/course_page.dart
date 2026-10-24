@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
@@ -19,8 +20,7 @@ class CoursePage extends StatefulWidget {
 class _CoursePageState extends State<CoursePage> {
   int _selectedIndex = 0;
 
-  static const String studentName =
-      'Putu Agus Dedy Putra Adnyana';
+  static const String studentName = 'Putu Agus Dedy Putra Adnyana';
   static const String studentNim = '2415051104';
 
   @override
@@ -33,7 +33,6 @@ class _CoursePageState extends State<CoursePage> {
 
         return Scaffold(
           backgroundColor: const Color(0xFFF3F7FB),
-
           appBar: AppBar(
             title: const Text(
               'Course Explorer v2',
@@ -42,23 +41,18 @@ class _CoursePageState extends State<CoursePage> {
             backgroundColor: const Color(0xFF1976D2),
             foregroundColor: Colors.white,
           ),
-
-          // Tombol tambah hanya muncul pada halaman Courses.
           floatingActionButton: _selectedIndex == 1
               ? FloatingActionButton(
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const AddCoursePage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const AddCoursePage()),
                     );
                   },
                   tooltip: 'Tambah mata kuliah',
                   child: const Icon(Icons.add),
                 )
               : null,
-
           body: Row(
             children: [
               if (isWide)
@@ -88,12 +82,9 @@ class _CoursePageState extends State<CoursePage> {
                     ),
                   ],
                 ),
-              Expanded(
-                child: _buildSelectedPage(provider),
-              ),
+              Expanded(child: _buildSelectedPage(provider)),
             ],
           ),
-
           bottomNavigationBar: isWide
               ? null
               : BottomNavigationBar(
@@ -144,16 +135,11 @@ class _CoursePageState extends State<CoursePage> {
 
   Widget _buildHomePage(CourseProvider provider) {
     if (provider.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.error != null) {
-      return ErrorView(
-        message: provider.error!,
-        onRetry: provider.loadCourses,
-      );
+      return ErrorView(message: provider.error!, onRetry: provider.loadCourses);
     }
 
     return ListView(
@@ -179,10 +165,7 @@ class _CoursePageState extends State<CoursePage> {
               SizedBox(height: 8),
               Text(
                 '$studentNim • $studentName',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF20466F),
-                ),
+                style: TextStyle(fontSize: 14, color: Color(0xFF20466F)),
               ),
             ],
           ),
@@ -227,9 +210,7 @@ class _CoursePageState extends State<CoursePage> {
               margin: const EdgeInsets.only(bottom: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
-                side: const BorderSide(
-                  color: Color(0xFFC7D8E8),
-                ),
+                side: const BorderSide(color: Color(0xFFC7D8E8)),
               ),
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(
@@ -257,9 +238,7 @@ class _CoursePageState extends State<CoursePage> {
                       ? 'Hapus dari favorit'
                       : 'Tambahkan ke favorit',
                   onPressed: () {
-                    context
-                        .read<CourseProvider>()
-                        .toggleFavorite(course.code);
+                    context.read<CourseProvider>().toggleFavorite(course.code);
                   },
                   icon: Icon(
                     provider.isFavorite(course.code)
@@ -295,20 +274,14 @@ class _CoursePageState extends State<CoursePage> {
       decoration: BoxDecoration(
         color: const Color(0xFFEAF5FB),
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(
-          color: const Color(0xFFA8CDE5),
-        ),
+        border: Border.all(color: const Color(0xFFA8CDE5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: const Color(0xFF58728B),
-              ),
+              Icon(icon, size: 18, color: const Color(0xFF58728B)),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
@@ -335,24 +308,80 @@ class _CoursePageState extends State<CoursePage> {
     );
   }
 
+  // Tahap 8: Dialog konfirmasi dan proses HTTP DELETE.
+  Future<void> _confirmDeleteCourse(Course course) async {
+    final provider = context.read<CourseProvider>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Hapus Mata Kuliah?'),
+          content: Text('Apakah kamu yakin ingin menghapus "${course.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    final courseId = course.id;
+
+    if (courseId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ID mata kuliah tidak ditemukan.')),
+      );
+      return;
+    }
+
+    try {
+      await provider.deleteCourse(courseId);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${course.title} berhasil dihapus.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menghapus mata kuliah: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Widget _buildCoursesPage(CourseProvider provider) {
     if (provider.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.error != null) {
-      return ErrorView(
-        message: provider.error!,
-        onRetry: provider.loadCourses,
-      );
+      return ErrorView(message: provider.error!, onRetry: provider.loadCourses);
     }
 
     if (provider.courses.isEmpty) {
-      return const Center(
-        child: Text('Data course belum tersedia'),
-      );
+      return const Center(child: Text('Data course belum tersedia'));
     }
 
     return ListView(
@@ -360,13 +389,10 @@ class _CoursePageState extends State<CoursePage> {
       children: [
         const Text(
           'Nama: $studentName',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const Text('NIM: $studentNim'),
         const SizedBox(height: 16),
-
         ...provider.courses.map((course) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -376,9 +402,7 @@ class _CoursePageState extends State<CoursePage> {
                   course: course,
                   isFavorite: provider.isFavorite(course.code),
                   onToggleFavorite: () {
-                    context
-                        .read<CourseProvider>()
-                        .toggleFavorite(course.code);
+                    context.read<CourseProvider>().toggleFavorite(course.code);
                   },
                   onTap: () {
                     Navigator.push(
@@ -406,13 +430,18 @@ class _CoursePageState extends State<CoursePage> {
                   if (updated == true) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text(
-                          'Mata kuliah berhasil diperbarui',
-                        ),
+                        content: Text('Mata kuliah berhasil diperbarui'),
                       ),
                     );
                   }
                 },
+              ),
+              IconButton(
+                tooltip: 'Hapus mata kuliah',
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: provider.isSaving
+                    ? null
+                    : () => _confirmDeleteCourse(course),
               ),
             ],
           );

@@ -150,14 +150,12 @@ class CourseProvider extends ChangeNotifier {
     try {
       await repository.updateCourse(courseId, course);
 
-      // Perbarui data lokal agar hasil edit langsung terlihat.
       final courseIndex = courses.indexWhere((item) => item.id == courseId);
 
       if (courseIndex >= 0) {
         courses[courseIndex] = course;
       }
 
-      // Perbarui data POST yang tersimpan di memori.
       final createdIndex = _createdCourses.indexWhere(
         (item) => item.id == courseId,
       );
@@ -165,6 +163,42 @@ class CourseProvider extends ChangeNotifier {
       if (createdIndex >= 0) {
         _createdCourses[createdIndex] = course;
       }
+
+      error = null;
+    } catch (e) {
+      error = e.toString();
+      rethrow;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  // Tahap 8: Menghapus mata kuliah menggunakan HTTP DELETE.
+  Future<void> deleteCourse(int id) async {
+    if (isSaving) {
+      throw Exception('Proses penyimpanan sedang berlangsung.');
+    }
+
+    final courseIndex = courses.indexWhere((course) => course.id == id);
+
+    if (courseIndex < 0) {
+      throw Exception('Mata kuliah tidak ditemukan.');
+    }
+
+    final course = courses[courseIndex];
+
+    isSaving = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      await repository.deleteCourse(id);
+
+      courses.removeWhere((item) => item.id == id);
+
+      _createdCourses.removeWhere((item) => item.id == id);
+      _favorites.remove(course.code);
 
       error = null;
     } catch (e) {

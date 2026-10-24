@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,19 +7,19 @@ import 'screens/course_page.dart';
 import 'services/course_api_service.dart';
 
 // Ganti dengan alamat dasar backend course yang sebenarnya.
-const String apiBaseUrl =
-    'https://jsonplaceholder.typicode.com';
+const String apiBaseUrl = 'https://jsonplaceholder.typicode.com';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Tahap 9: Rakit service -> repository -> provider.
+  final repository = CourseRepository(
+    CourseApiService(apiBaseUrl),
+  );
+
   runApp(
     ChangeNotifierProvider(
-      create: (_) => CourseProvider(
-        CourseRepository(
-          CourseApiService(apiBaseUrl),
-        ),
-      )..loadCourses(),
+      create: (_) => CourseProvider(repository)..loadCourses(),
       child: const MyApp(),
     ),
   );

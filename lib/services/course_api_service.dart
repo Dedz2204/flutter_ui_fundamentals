@@ -3,13 +3,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
+import 'course_data_source.dart';
 
-class CourseApiService {
+class CourseApiService implements CourseDataSource {
   CourseApiService(this.baseUrl);
 
   final String baseUrl;
 
   // Mengambil daftar mata kuliah menggunakan HTTP GET.
+  @override
   Future<List<Course>> getCourses() async {
     final response = await http.get(Uri.parse('$baseUrl/posts'));
 
@@ -46,6 +48,7 @@ class CourseApiService {
   }
 
   // Menambahkan mata kuliah menggunakan HTTP POST.
+  @override
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
@@ -75,14 +78,19 @@ class CourseApiService {
     }
 
     throw Exception(
-      'Gagal membuat course. Kode HTTP: ${response.statusCode}',
+      'Gagal membuat mata kuliah. '
+      'Kode HTTP: ${response.statusCode}. '
+      'Respons: ${response.body}',
     );
   }
 
   // Memperbarui mata kuliah menggunakan HTTP PUT.
+  @override
   Future<void> updateCourse(int id, Course course) async {
+    final url = Uri.parse('$baseUrl/posts/$id');
+
     final response = await http.put(
-      Uri.parse('$baseUrl/posts/$id'),
+      url,
       headers: {'Content-Type': 'application/json; charset=UTF-8'},
       body: jsonEncode({
         'id': id,
@@ -96,21 +104,26 @@ class CourseApiService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
         'Gagal memperbarui mata kuliah. '
-        'Kode HTTP: ${response.statusCode}',
+        'URL: $url, '
+        'Kode HTTP: ${response.statusCode}, '
+        'Respons: ${response.body}',
       );
     }
   }
 
   // Menghapus mata kuliah menggunakan HTTP DELETE.
+  @override
   Future<void> deleteCourse(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/posts/$id'),
-    );
+    final url = Uri.parse('$baseUrl/posts/$id');
+
+    final response = await http.delete(url);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(
         'Gagal menghapus mata kuliah. '
-        'Kode HTTP: ${response.statusCode}',
+        'URL: $url, '
+        'Kode HTTP: ${response.statusCode}, '
+        'Respons: ${response.body}',
       );
     }
   }

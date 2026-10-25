@@ -1,79 +1,106 @@
-# flutter_application_1
+# Course Data Manager
 
-A new Flutter project.
+Aplikasi mobile berbasis Flutter untuk mengelola data mata kuliah. Proyek ini dikembangkan sebagai bagian dari praktikum dengan menggunakan Provider untuk pengelolaan state dan Supabase sebagai backend database.
 
-## Getting Started
+## Identitas Mahasiswa
 
-This project is a starting point for a Flutter application.
+- **Nama:** Putu Agus Dedy Putra Adnyana
+- **NIM:** 2415051104
 
-A few resources to get you started if this is your first Flutter project:
+## Fitur Aplikasi
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- Menampilkan daftar mata kuliah.
+- Menambahkan data mata kuliah.
+- Mengedit data mata kuliah.
+- Menghapus data mata kuliah.
+- Mengelola mata kuliah favorit.
+- Menampilkan status loading dan error.
+- Menyediakan navigasi responsif.
+- Menangani kegagalan request dan kesalahan pemetaan data.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Teknologi yang Digunakan
 
+- **Flutter:** framework untuk mengembangkan aplikasi mobile.
+- **Dart:** bahasa pemrograman yang digunakan.
+- **Provider:** pengelolaan state aplikasi menggunakan `ChangeNotifier`.
+- **Supabase:** backend dan database berbasis PostgreSQL.
+- **HTTP:** digunakan pada tahap pembelajaran REST API sebelumnya.
 
-## Struktur Folder dan Tanggung Jawab
+## Struktur Folder
 
-- **models/**: Menyimpan model data mata kuliah.
-- **providers/**: Mengelola state menggunakan ChangeNotifier dan memberi tahu UI saat terjadi perubahan.
-- **repositories/**: Menjadi perantara antara Provider dan Service dalam pengambilan data.
-- **services/**: Membaca data JSON dan mengubahnya menjadi objek model.
-- **screens/**: Menyediakan halaman utama, detail mata kuliah, dan halaman favorit.
-- **widgets/**: Menyimpan komponen UI yang dapat digunakan kembali.
+- `models/`: menyimpan model data mata kuliah.
+- `providers/`: mengelola state aplikasi.
+- `repositories/`: menjadi perantara antara Provider dan Service.
+- `services/`: menangani komunikasi dengan sumber data.
+- `screens/`: menyimpan halaman aplikasi.
+- `widgets/`: menyimpan komponen antarmuka yang dapat digunakan kembali.
+- `test/`: menyimpan pengujian otomatis.
 
-### Arah Dependency
+## Arsitektur Aplikasi
 
-Arah dependency aplikasi adalah Screens/Widgets → Provider → Repository → Service/Data Source. UI tidak membaca JSON secara langsung, Service tidak menangani tampilan, dan Provider tidak menyimpan BuildContext sebagai state.
+Alur arsitektur aplikasi:
 
-## Tahap 1 — Membaca REST Endpoint dan JSON
+`Screens/Widgets → Provider → Repository → Service/Data Source`
 
-### Informasi Endpoint
+Penjelasan setiap bagian:
 
-- **URL:** https://jsonplaceholder.typicode.com/posts/1
-- **HTTP Method:** GET
-- **Status Code:** 200 OK (jika request berhasil)
-- **Resource:** Post
-- **Response Format:** JSON
+- **Screens/Widgets:** menampilkan antarmuka dan menerima interaksi pengguna.
+- **Provider:** mengelola state dan menyediakan data kepada antarmuka.
+- **Repository:** menjadi perantara pengelolaan dan pengambilan data.
+- **Service/Data Source:** menangani komunikasi dengan sumber data.
+- **Model:** merepresentasikan struktur data mata kuliah.
 
-### Struktur Response
+## Backend dan Database
 
-| Field | Tipe Data | Keterangan |
-|---|---|---|
-| `userId` | Integer | ID pengguna pemilik post |
-| `id` | Integer | ID post |
-| `title` | String | Judul post |
-| `body` | String | Isi post |
+Aplikasi menggunakan Supabase dengan database PostgreSQL untuk menyimpan data mata kuliah. Operasi CRUD (Create, Read, Update, Delete) dilakukan terhadap tabel `courses`.
 
-### Catatan
+Kolom utama tabel meliputi:
 
-Endpoint ini digunakan untuk mengambil satu data post dari JSONPlaceholder. JSONPlaceholder merupakan API dummy untuk latihan. Operasi penulisan seperti POST, PUT, PATCH, dan DELETE hanya disimulasikan sehingga perubahan tidak disimpan secara permanen.
+- `id`: identitas mata kuliah.
+- `code`: kode mata kuliah.
+- `title`: nama mata kuliah.
+- `credits`: jumlah SKS.
+- `status`: status mata kuliah.
+- `created_at`: waktu pembuatan data.
 
-## Tahap 2 — HTTP GET dari Flutter
+Row Level Security (RLS) digunakan untuk mengatur akses ke database sesuai dengan kebijakan yang diterapkan.
 
-### Endpoint API
-- **URL:** https://jsonplaceholder.typicode.com/posts/1
-- **HTTP Method:** GET
-- **Status Code:** 200 OK
-- **Format Response:** JSON
+## Persiapan dan Cara Menjalankan
 
-### Implementasi
-Request HTTP GET dilakukan menggunakan package `http` pada Flutter. Response diperiksa melalui `statusCode` sebelum diproses menggunakan `jsonDecode`.
+1. Instal Flutter SDK dan siapkan perangkat atau emulator.
+2. Clone repository proyek ini.
+3. Buka folder proyek menggunakan VS Code.
+4. Unduh dependensi dengan menjalankan:
 
-Data JSON yang diterima memiliki empat field:
-- `userId`: ID pengguna pemilik post.
-- `id`: ID post.
-- `title`: Judul post.
-- `body`: Isi post.
+   ```bash
+   flutter pub get
+   ```
 
-Jumlah field JSON ditampilkan menggunakan `debugPrint`.
+5. Pastikan URL dan publishable key atau anon key Supabase telah dikonfigurasi sesuai dengan konfigurasi proyek.
+6. Jalankan aplikasi menggunakan:
 
-### Pengujian Error
-Endpoint diubah sementara menjadi URL yang tidak valid untuk menguji penanganan error. Hasil pengujian menunjukkan status HTTP `404` dan exception ditampilkan melalui `debugPrint`. Setelah pengujian, endpoint dikembalikan ke URL yang benar.
+   ```bash
+   flutter run
+   ```
 
-### Catatan/Temuan
-Pengujian HTTP GET berhasil dengan status `200`, dan response JSON berhasil diproses. Pengujian endpoint yang tidak valid menghasilkan status `404` dan ditangani oleh mekanisme exception.
+## Pengujian
+
+Untuk memeriksa kesalahan analisis kode, jalankan:
+
+```bash
+flutter analyze
+```
+
+Untuk menjalankan pengujian otomatis, gunakan:
+
+```bash
+flutter test
+```
+
+## Keamanan
+
+- Jangan menyimpan `service_role` key, password, atau token rahasia di dalam source code maupun repository.
+- Jangan mengunggah file `.env` yang berisi informasi rahasia.
+- Terapkan RLS dan kebijakan database yang sesuai untuk mengatur akses data.
+- Validasi pada antarmuka tidak menggantikan validasi dan otorisasi di backend.
+- Gunakan hanya publishable key atau anon key yang sesuai untuk aplikasi klien, dengan kebijakan akses database yang benar.

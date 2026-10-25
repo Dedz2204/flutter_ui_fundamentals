@@ -35,7 +35,7 @@ class _CoursePageState extends State<CoursePage> {
           backgroundColor: const Color(0xFFF3F7FB),
           appBar: AppBar(
             title: const Text(
-              'Course Explorer v2',
+              'Course Data Manager',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: const Color(0xFF1976D2),

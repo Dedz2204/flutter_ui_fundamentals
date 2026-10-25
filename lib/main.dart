@@ -6,10 +6,7 @@ import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/course_page.dart';
-import 'services/course_api_service.dart';
-
-// Backend API Tahap 9.
-const String apiBaseUrl = 'https://jsonplaceholder.typicode.com';
+import 'services/course_supabase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +18,7 @@ Future<void> main() async {
   );
 
   // Rakit service -> repository -> provider.
-  final repository = CourseRepository(CourseApiService(apiBaseUrl));
+  final repository = CourseRepository(CourseSupabaseService());
 
   runApp(
     ChangeNotifierProvider(

@@ -23,17 +23,23 @@ class _EditCoursePageState extends State<EditCoursePage> {
   late String _status;
   bool _isSubmitting = false;
 
+  // Status harus sama dengan nilai pada database Supabase.
+  static const List<String> _validStatuses = ['planned', 'active', 'done'];
+
   @override
   void initState() {
     super.initState();
 
-    // Mengisi form dengan data mata kuliah sebelumnya.
     _codeController = TextEditingController(text: widget.course.code);
     _titleController = TextEditingController(text: widget.course.title);
     _creditsController = TextEditingController(
       text: widget.course.credits.toString(),
     );
-    _status = widget.course.status;
+
+    // Menangani status lama atau nilai yang tidak dikenal.
+    _status = _validStatuses.contains(widget.course.status)
+        ? widget.course.status
+        : 'planned';
   }
 
   @override
@@ -66,7 +72,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
 
     final updatedCourse = Course(
       id: widget.course.id,
-      code: widget.course.code,
+      code: _codeController.text.trim(),
       title: _titleController.text.trim(),
       credits: credits,
       status: _status,
@@ -162,11 +168,8 @@ class _EditCoursePageState extends State<EditCoursePage> {
                 ),
                 items: const [
                   DropdownMenuItem(value: 'planned', child: Text('Planned')),
-                  DropdownMenuItem(value: 'ongoing', child: Text('Ongoing')),
-                  DropdownMenuItem(
-                    value: 'completed',
-                    child: Text('Completed'),
-                  ),
+                  DropdownMenuItem(value: 'active', child: Text('Active')),
+                  DropdownMenuItem(value: 'done', child: Text('Done')),
                 ],
                 onChanged: _isSubmitting
                     ? null

@@ -16,12 +16,12 @@ class HomePage extends StatelessWidget {
         '/login',
         (route) => false,
       );
-    } catch (_) {
+    } catch (e) {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal logout. Silakan coba lagi.'),
+        SnackBar(
+          content: Text('Gagal logout: $e'),
         ),
       );
     }
@@ -36,9 +36,9 @@ class HomePage extends StatelessWidget {
         title: const Text('Home'),
         actions: [
           IconButton(
-            onPressed: () => _logout(context),
-            icon: const Icon(Icons.logout),
             tooltip: 'Logout',
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context),
           ),
         ],
       ),
@@ -61,10 +61,7 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                'Email: ${user?.email ?? '-'}',
-                textAlign: TextAlign.center,
-              ),
+              Text('Email: ${user?.email ?? '-'}'),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,

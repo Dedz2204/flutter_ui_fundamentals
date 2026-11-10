@@ -1,4 +1,3 @@
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -34,8 +33,8 @@ class AuthService {
     );
   }
 
-  Future<void> logout() {
-    return _client.auth.signOut();
+  Future<void> logout() async {
+    await _client.auth.signOut();
   }
 
   Stream<AuthState> get authStateChanges {

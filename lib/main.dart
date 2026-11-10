@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'app_keys.dart';
 import 'config/supabase_config.dart';
+import 'pages/home_page.dart';
+import 'pages/login_page.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/course_page.dart';
-import 'pages/home_page.dart';
-import 'pages/login_page.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
 
@@ -40,16 +41,24 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Course Data Manager',
+
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+        ),
         useMaterial3: true,
       ),
+
+      // Key global untuk navigasi dan SnackBar.
+      navigatorKey: navigatorKey,
+      scaffoldMessengerKey: messengerKey,
 
       // Memeriksa session ketika aplikasi dibuka.
       home: StreamBuilder<AuthState>(
         stream: Supabase.instance.client.auth.onAuthStateChange,
         builder: (context, snapshot) {
-          final session = Supabase.instance.client.auth.currentSession;
+          final session =
+              Supabase.instance.client.auth.currentSession;
 
           if (session != null) {
             return const HomePage();

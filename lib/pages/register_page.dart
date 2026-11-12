@@ -104,7 +104,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
               // Pilihan Role
               DropdownButtonFormField<String>(
-                value: _role,
+                initialValue: _role,
                 decoration: const InputDecoration(
                   labelText: 'Daftar sebagai',
                   border: OutlineInputBorder(),

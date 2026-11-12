@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../widgets/role_guard.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,8 +17,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    // Mengambil profil pengguna ketika halaman dibuka.
     _profileFuture = ProfileService().getMyProfile();
   }
 
@@ -35,104 +34,107 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal logout: $e'),
-        ),
+        SnackBar(content: Text('Gagal logout: $e')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(
-            tooltip: 'Logout',
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
-      ),
-
-      body: FutureBuilder<UserProfile?>(
-        future: _profileFuture,
-        builder: (context, snapshot) {
-          // Menampilkan loading ketika mengambil profil.
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(
+    return FutureBuilder<UserProfile?>(
+      future: _profileFuture,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(
               child: CircularProgressIndicator(),
-            );
-          }
-
-          // Menangani jika profil gagal dimuat.
-          if (snapshot.hasError || snapshot.data == null) {
-            return const Center(
-              child: Text('Gagal memuat profil pengguna'),
-            );
-          }
-
-          final profile = snapshot.data!;
-
-          return ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              const SizedBox(height: 20),
-
-              const Icon(
-                Icons.account_circle,
-                size: 80,
-              ),
-
-              const SizedBox(height: 16),
-
-              const Center(
-                child: Text(
-                  'Login Berhasil!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Informasi Nama.
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.person),
-                  title: const Text('Nama'),
-                  subtitle: Text(
-                    profile.name.isEmpty ? '-' : profile.name,
-                  ),
-                ),
-              ),
-
-              // Informasi Email.
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.email),
-                  title: const Text('Email'),
-                  subtitle: Text(profile.email),
-                ),
-              ),
-
-              // Informasi Role.
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.badge),
-                  title: const Text('Role'),
-                  subtitle: Text(profile.role),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-            ],
+            ),
           );
-        },
-      ),
+        }
+
+        final p = snap.data;
+
+        if (snap.hasError || p == null) {
+          return const Scaffold(
+            body: Center(
+              child: Text('Gagal memuat profil'),
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('KosFinder (${p.role})'),
+            actions: [
+              IconButton(
+                tooltip: 'Logout',
+                icon: const Icon(Icons.logout),
+                onPressed: _logout,
+              ),
+            ],
+          ),
+
+          body: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Informasi pengguna.
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(
+                  p.name.isEmpty ? p.email : p.name,
+                ),
+                subtitle: Text('${p.email} • ${p.role}'),
+              ),
+
+              const Divider(),
+
+              // Fitur yang tersedia untuk semua role.
+              const ListTile(
+                leading: Icon(Icons.list),
+                title: Text('Daftar Kos'),
+              ),
+
+              const ListTile(
+                leading: Icon(Icons.info_outline),
+                title: Text('Detail Kos'),
+              ),
+
+              // Hanya Owner dan Admin.
+              if (p.isOwner || p.isAdmin)
+                const ListTile(
+                  leading: Icon(Icons.home_work),
+                  title: Text('My Kos'),
+                ),
+
+              // Hanya Admin.
+              if (p.isAdmin)
+                const ListTile(
+                  leading: Icon(Icons.admin_panel_settings),
+                  title: Text('Kelola Data (Admin)'),
+                ),
+            ],
+          ),
+
+          // Tombol Tambah Kos hanya untuk Owner dan Admin.
+          floatingActionButton: RoleGuard(
+            role: p.role,
+            allowed: const ['owner', 'admin'],
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Fitur Tambah Kos belum diimplementasikan.',
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add_home),
+              label: const Text('Tambah Kos'),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -13,14 +13,17 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
+  final _nameC = TextEditingController();
   final _emailC = TextEditingController();
   final _passC = TextEditingController();
   final _confirmC = TextEditingController();
 
+  String _role = 'seeker';
   bool _loading = false;
 
   @override
   void dispose() {
+    _nameC.dispose();
     _emailC.dispose();
     _passC.dispose();
     _confirmC.dispose();
@@ -40,8 +43,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       final response = await AuthService.instance.register(
+        name: _nameC.text.trim(),
         email: _emailC.text.trim(),
         password: _passC.text,
+        role: _role,
       );
 
       if (!mounted) return;
@@ -78,12 +83,62 @@ class _RegisterPageState extends State<RegisterPage> {
           key: _formKey,
           child: ListView(
             children: [
+              // Input Nama
+              TextFormField(
+                controller: _nameC,
+                decoration: const InputDecoration(
+                  labelText: 'Nama',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Nama wajib diisi';
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Pilihan Role
+              DropdownButtonFormField<String>(
+                value: _role,
+                decoration: const InputDecoration(
+                  labelText: 'Daftar sebagai',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.badge),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'seeker',
+                    child: Text('Pencari Kos'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'owner',
+                    child: Text('Pemilik Kos'),
+                  ),
+                ],
+                onChanged: _loading
+                    ? null
+                    : (value) {
+                        setState(() {
+                          _role = value ?? 'seeker';
+                        });
+                      },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Input Email
               TextFormField(
                 controller: _emailC,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -99,13 +154,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 16),
+
+              // Input Password
               TextFormField(
                 controller: _passC,
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -119,13 +178,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 16),
+
+              // Konfirmasi Password
               TextFormField(
                 controller: _confirmC,
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: 'Konfirmasi Password',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock_outline),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -139,7 +202,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 24),
+
+              // Tombol Register
               FilledButton(
                 onPressed: _loading ? null : _register,
                 child: _loading

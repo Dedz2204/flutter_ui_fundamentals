@@ -1,23 +1,38 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
-import '../screens/course_page.dart';
+import '../services/profile_service.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  Future<void> _logout(BuildContext context) async {
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late final Future<UserProfile?> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Mengambil profil pengguna ketika halaman dibuka.
+    _profileFuture = ProfileService().getMyProfile();
+  }
+
+  Future<void> _logout() async {
     try {
       await AuthService.instance.logout();
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       Navigator.of(context).pushNamedAndRemoveUntil(
         '/login',
         (route) => false,
       );
     } catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -29,8 +44,6 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthService.instance.currentUser;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -38,48 +51,87 @@ class HomePage extends StatelessWidget {
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
-            onPressed: () => _logout(context),
+            onPressed: _logout,
           ),
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+
+      body: FutureBuilder<UserProfile?>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          // Menampilkan loading ketika mengambil profil.
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          // Menangani jika profil gagal dimuat.
+          if (snapshot.hasError || snapshot.data == null) {
+            return const Center(
+              child: Text('Gagal memuat profil pengguna'),
+            );
+          }
+
+          final profile = snapshot.data!;
+
+          return ListView(
+            padding: const EdgeInsets.all(24),
             children: [
+              const SizedBox(height: 20),
+
               const Icon(
                 Icons.account_circle,
                 size: 80,
               ),
+
               const SizedBox(height: 16),
-              const Text(
-                'Login Berhasil!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+
+              const Center(
+                child: Text(
+                  'Login Berhasil!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text('Email: ${user?.email ?? '-'}'),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CoursePage(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.school),
-                  label: const Text('Buka Course Data Manager'),
+
+              const SizedBox(height: 24),
+
+              // Informasi Nama.
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.person),
+                  title: const Text('Nama'),
+                  subtitle: Text(
+                    profile.name.isEmpty ? '-' : profile.name,
+                  ),
                 ),
               ),
+
+              // Informasi Email.
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.email),
+                  title: const Text('Email'),
+                  subtitle: Text(profile.email),
+                ),
+              ),
+
+              // Informasi Role.
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.badge),
+                  title: const Text('Role'),
+                  subtitle: Text(profile.role),
+                ),
+              ),
+
+              const SizedBox(height: 24),
             ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }

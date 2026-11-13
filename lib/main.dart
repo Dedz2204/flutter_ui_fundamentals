@@ -11,9 +11,9 @@ import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
-import 'screens/course_page.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,31 +23,30 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 2. Meminta izin notifikasi.
-  final messaging = FirebaseMessaging.instance;
-
-  final settings = await messaging.requestPermission();
-
-  debugPrint(
-    'Status izin notifikasi: ${settings.authorizationStatus}',
+  // 2. Praktik 10: Mendaftarkan background notification handler.
+  FirebaseMessaging.onBackgroundMessage(
+    firebaseMessagingBackgroundHandler,
   );
 
-  // 3. Mengambil FCM Registration Token.
-  final token = await messaging.getToken();
+  // 3. Praktik 9: Mendengarkan token FCM.
+  FirebaseMessaging.instance.onRegistered.listen((token) {
+    debugPrint('FCM TOKEN BERHASIL DITERIMA: $token');
+  });
 
-  debugPrint('FCM TOKEN: $token');
+  // 4. Mendaftarkan perangkat ke Firebase Cloud Messaging.
+  await FirebaseMessaging.instance.register();
 
-  // 4. Inisialisasi Supabase.
+  // 5. Inisialisasi Supabase.
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     publishableKey: SupabaseConfig.supabaseAnonKey,
   );
 
-  // 5. Inisialisasi data source dan repository.
+  // 6. Inisialisasi data source dan repository.
   final CourseDataSource dataSource = CourseSupabaseService();
   final repository = CourseRepository(dataSource);
 
-  // 6. Menjalankan aplikasi.
+  // 7. Menjalankan aplikasi.
   runApp(
     ChangeNotifierProvider(
       create: (_) => CourseProvider(repository)..loadCourses(),
@@ -62,37 +61,36 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'KosFinder',
+      scaffoldMessengerKey: messengerKey,
       debugShowCheckedModeBanner: false,
-      title: 'Course Data Manager',
-
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
         ),
         useMaterial3: true,
       ),
+      home: const AuthGate(),
+    );
+  }
+}
 
-      navigatorKey: navigatorKey,
-      scaffoldMessengerKey: messengerKey,
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
-      home: StreamBuilder<AuthState>(
-        stream: Supabase.instance.client.auth.onAuthStateChange,
-        builder: (context, snapshot) {
-          final session =
-              Supabase.instance.client.auth.currentSession;
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session =
+            Supabase.instance.client.auth.currentSession;
 
-          if (session != null) {
-            return const HomePage();
-          }
-
+        if (session == null) {
           return const LoginPage();
-        },
-      ),
+        }
 
-      routes: {
-        '/home': (context) => const HomePage(),
-        '/login': (context) => const LoginPage(),
-        '/courses': (context) => const CoursePage(),
+        return const HomePage();
       },
     );
   }

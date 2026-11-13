@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../services/kos_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/role_guard.dart';
 import 'kos_page.dart';
 
@@ -16,11 +18,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late final Future<UserProfile?> _profileFuture;
+  late final Future<AuthorizationStatus> _permissionFuture;
 
   @override
   void initState() {
     super.initState();
+
     _profileFuture = ProfileService().getMyProfile();
+
+    // Praktik 10: Inisialisasi notifikasi dan listener foreground.
+    // Fungsi ini sekaligus meminta izin notifikasi Praktik 8.
+    _permissionFuture = NotificationService.instance.init();
   }
 
   // Logout pengguna.
@@ -49,6 +57,112 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(
         builder: (context) => const KosPage(),
       ),
+    );
+  }
+
+  // Tampilan status izin notifikasi.
+  Widget _buildNotificationStatus() {
+    return FutureBuilder<AuthorizationStatus>(
+      future: _permissionFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Card(
+            child: ListTile(
+              leading: Icon(Icons.notifications),
+              title: Text('Izin Notifikasi'),
+              subtitle: Text('Memeriksa status izin...'),
+              trailing: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const Card(
+            child: ListTile(
+              leading: Icon(
+                Icons.error_outline,
+                color: Colors.red,
+              ),
+              title: Text('Izin Notifikasi'),
+              subtitle: Text(
+                'Gagal memeriksa status izin',
+              ),
+            ),
+          );
+        }
+
+        final status = snapshot.data!;
+
+        String message;
+        IconData icon;
+        Color color;
+
+        switch (status) {
+          case AuthorizationStatus.authorized:
+            message = 'Notifikasi diizinkan';
+            icon = Icons.notifications_active;
+            color = Colors.green;
+            break;
+
+          case AuthorizationStatus.denied:
+            message = 'Notifikasi ditolak';
+            icon = Icons.notifications_off;
+            color = Colors.red;
+            break;
+
+          case AuthorizationStatus.deniedPermanently:
+            message = 'Izin notifikasi ditolak secara permanen';
+            icon = Icons.notifications_off;
+            color = Colors.red;
+            break;
+
+          case AuthorizationStatus.provisional:
+            message = 'Izin notifikasi sementara';
+            icon = Icons.notifications;
+            color = Colors.orange;
+            break;
+
+          case AuthorizationStatus.notDetermined:
+            message = 'Izin belum ditentukan';
+            icon = Icons.notifications_none;
+            color = Colors.orange;
+            break;
+        }
+
+        return Card(
+          elevation: 2,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: color.withValues(alpha: 0.12),
+              child: Icon(
+                icon,
+                color: color,
+              ),
+            ),
+            title: const Text(
+              'Izin Notifikasi',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              '$message\nStatus: ${status.name}',
+            ),
+            isThreeLine: true,
+            trailing: Icon(
+              Icons.circle,
+              color: color,
+              size: 14,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -91,7 +205,9 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
               child: const Text('Batal'),
             ),
             ElevatedButton(
@@ -293,6 +409,11 @@ class _HomePageState extends State<HomePage> {
 
               const Divider(),
 
+              // Status izin notifikasi Firebase.
+              _buildNotificationStatus(),
+
+              const Divider(),
+
               // Daftar Kos.
               ListTile(
                 leading: const Icon(Icons.list),
@@ -324,7 +445,7 @@ class _HomePageState extends State<HomePage> {
 
               const Divider(),
 
-              // Tombol pengujian sementara untuk Praktik 6.
+              // Pengujian Security RLS.
               ListTile(
                 leading: const Icon(Icons.security),
                 title: const Text('Uji Security RLS'),

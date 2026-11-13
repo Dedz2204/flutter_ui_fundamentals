@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// Model profil pengguna
 class UserProfile {
   final String id;
   final String email;
@@ -13,14 +14,14 @@ class UserProfile {
     required this.role,
   });
 
-  // Memeriksa jenis role pengguna.
+  // Pemeriksaan role pengguna
   bool get isSeeker => role == 'seeker';
 
   bool get isOwner => role == 'owner';
 
   bool get isAdmin => role == 'admin';
 
-  // Mengubah data dari Supabase menjadi objek UserProfile.
+  // Mengubah data Supabase menjadi UserProfile
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
       id: map['id'] as String,
@@ -31,10 +32,11 @@ class UserProfile {
   }
 }
 
+// Service untuk mengambil profil pengguna
 class ProfileService {
   final SupabaseClient _client = Supabase.instance.client;
 
-  // Mengambil profil pengguna yang sedang login.
+  // Mengambil profil pengguna yang sedang login
   Future<UserProfile?> getMyProfile() async {
     final user = _client.auth.currentUser;
 

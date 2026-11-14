@@ -29,6 +29,14 @@ class _HomePageState extends State<HomePage> {
     // Praktik 10: Inisialisasi notifikasi dan listener foreground.
     // Fungsi ini sekaligus meminta izin notifikasi Praktik 8.
     _permissionFuture = NotificationService.instance.init();
+
+    // Bonus: Menangani interaksi ketika notifikasi ditekan.
+    // Dipanggil setelah tampilan dan Navigator siap.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      NotificationService.instance.setupInteractedMessage();
+    });
   }
 
   // Logout pengguna.

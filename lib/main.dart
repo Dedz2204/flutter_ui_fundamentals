@@ -28,9 +28,12 @@ Future<void> main() async {
     firebaseMessagingBackgroundHandler,
   );
 
-  // 3. Praktik 9: Mendengarkan token FCM.
   FirebaseMessaging.instance.onRegistered.listen((token) {
-    debugPrint('FCM TOKEN BERHASIL DITERIMA: $token');
+    final maskedToken = token.length > 12
+        ? '${token.substring(0, 6)}...${token.substring(token.length - 6)}'
+        : '***';
+
+    debugPrint('FCM TOKEN BERHASIL DITERIMA: $maskedToken');
   });
 
   // 4. Mendaftarkan perangkat ke Firebase Cloud Messaging.
@@ -62,6 +65,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'KosFinder',
+      navigatorKey: navigatorKey,
       scaffoldMessengerKey: messengerKey,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

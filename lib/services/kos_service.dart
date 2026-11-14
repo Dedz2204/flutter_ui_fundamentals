@@ -24,6 +24,19 @@ class KosService {
     return List<Map<String, dynamic>>.from(data);
   }
 
+  // Mengambil satu data kos berdasarkan ID
+  Future<Map<String, dynamic>?> fetchById(String id) async {
+    final data = await _client
+        .from('kos')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+
+    if (data == null) return null;
+
+    return Map<String, dynamic>.from(data);
+  }
+
   // Menambahkan data kos
   Future<void> add({
     required String name,
@@ -43,7 +56,6 @@ class KosService {
     String id,
     Map<String, dynamic> values,
   ) async {
-    // Hanya mengizinkan perubahan kolom berikut
     const allowedFields = ['name', 'address', 'price'];
 
     final safeValues = {

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../app_keys.dart';
 import '../firebase_options.dart';
+import '../pages/kos_detail_page.dart';
 
 // Praktik 10: Background Handler.
 @pragma('vm:entry-point')
@@ -32,6 +33,7 @@ class NotificationService {
       FirebaseMessaging.instance;
 
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
+  StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
 
   // Praktik 8: Meminta izin notifikasi.
   Future<AuthorizationStatus> requestPermission() async {
@@ -131,9 +133,54 @@ class NotificationService {
     return status;
   }
 
-  // Membersihkan listener foreground.
+  // Bonus: Menangani notifikasi yang ditekan.
+  Future<void> setupInteractedMessage() async {
+    // Aplikasi tertutup lalu dibuka melalui notifikasi.
+    final initialMessage = await _messaging.getInitialMessage();
+
+    if (initialMessage != null) {
+      _handleNotificationTap(initialMessage);
+    }
+
+    // Aplikasi berada di background lalu notifikasi ditekan.
+    await _messageOpenedSubscription?.cancel();
+
+    _messageOpenedSubscription =
+        FirebaseMessaging.onMessageOpenedApp.listen(
+      _handleNotificationTap,
+    );
+  }
+
+  // Membuka halaman detail kos berdasarkan kos_id.
+  void _handleNotificationTap(RemoteMessage message) {
+    debugPrint('DATA NOTIFIKASI: ${message.data}');
+
+    final kosId = message.data['kos_id'];
+
+    debugPrint('KOS ID DITERIMA: $kosId');
+
+    if (kosId == null || kosId.toString().isEmpty) {
+      debugPrint('Notification tidak memiliki kos_id.');
+      return;
+    }
+
+    debugPrint('Notification ditekan. Kos ID: $kosId');
+
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => KosDetailPage(
+          kosId: kosId.toString(),
+        ),
+      ),
+    );
+  }
+
+  // Membersihkan listener.
   Future<void> dispose() async {
     await _foregroundSubscription?.cancel();
+    await _messageOpenedSubscription?.cancel();
+
     _foregroundSubscription = null;
+    _messageOpenedSubscription = null;
   }
 }
